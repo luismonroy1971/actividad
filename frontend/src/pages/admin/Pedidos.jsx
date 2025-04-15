@@ -7,7 +7,7 @@ import Message from '../../components/Message'
 
 const Pedidos = () => {
   const dispatch = useDispatch()
-  const { pedidos, loading, error, success } = useSelector((state) => state.pedido)
+  const { pedidos, loading, error, success } = useSelector((state) => state.pedidos)
   const [filteredPedidos, setFilteredPedidos] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterEstado, setFilterEstado] = useState('')

@@ -8,7 +8,7 @@ import Message from '../../components/Message'
 const PedidoDetalle = () => {
   const { id } = useParams()
   const dispatch = useDispatch()
-  const { pedido, loading, error, success } = useSelector((state) => state.pedido)
+  const { pedido, loading, error, success } = useSelector((state) => state.pedidos)
   const [estadoActual, setEstadoActual] = useState('')
   
   useEffect(() => {

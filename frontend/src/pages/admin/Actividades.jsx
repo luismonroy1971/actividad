@@ -7,7 +7,7 @@ import Message from '../../components/Message'
 
 const Actividades = () => {
   const dispatch = useDispatch()
-  const { actividades, loading, error, success } = useSelector((state) => state.actividad)
+  const { actividades, loading, error, success } = useSelector((state) => state.actividades)
   const [filteredActividades, setFilteredActividades] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(null)

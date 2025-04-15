@@ -7,7 +7,7 @@ import Message from '../../components/Message'
 
 const Opciones = () => {
   const dispatch = useDispatch()
-  const { opciones, loading, error, success } = useSelector((state) => state.opcion)
+  const { opciones, loading, error, success } = useSelector((state) => state.opciones)
   const [filteredOpciones, setFilteredOpciones] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterActividad, setFilterActividad] = useState('')
