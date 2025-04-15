@@ -1,0 +1,166 @@
+Objetivo General
+Desarrollar una aplicación web completa para gestionar actividades pro fondos (como
+Polladas, Carapulcradas, Chancho al Palo, etc.), que permita el registro de actividades,
+opciones por actividad, clientes, control de pagos, y proporcione dashboards
+administrativos y acceso a usuarios finales.
+Requisitos Funcionales
+1. Gestión de Actividades
+• Registro de Actividades:
+o Título de la actividad
+o Descripción
+o Fecha de realización
+o Lugar
+o Estado (Activa, Finalizada, Cancelada)
+o Imagen promocional (opcional)
+• Opciones por Actividad:
+o Cada actividad debe poder tener múltiples opciones/productos
+o Ejemplo: Para una Carapulcrada → opciones: Chancho, Pollo
+o Cada opción solo necesita tener un nombre descriptivo
+o Este nombre se mostrará en el Registro de Pedidos
+2. Gestión de Clientes
+• Registro de Clientes:
+o Nombre completo
+o Correo electrónico
+o Documento de identidad
+o Teléfono
+o Pregunta de validación personalizada
+o Respuesta de validación
+3. Control de Pagos
+• Registro de Pedidos:
+o Selección de actividad
+o Selección de cliente
+o Selección de producto/opción
+o Cantidad solicitada
+o Costo unitario (traído automáticamente)
+o Costo total (calculado)
+o Estado del pago (Pendiente, Pagado)
+o Imagen/constancia del pago realizado (archivo adjunto)
+o Fecha de registro
+o Fecha de pago
+4. Panel de Administración
+• Dashboard Administrativo:
+o Resumen de actividades activas
+o Total de pedidos por actividad
+o Total de ingresos por actividad
+o Detalle de pagos pendientes
+o Detalle de pagos confirmados
+• Funcionalidades Administrativas:
+o CRUD completo de actividades
+o CRUD completo de opciones por actividad
+o CRUD completo de clientes
+o Gestión de pagos (actualizar estados)
+o Validación manual de comprobantes de pago
+o Generación de reportes
+5. Portal de Clientes
+• Autenticación:
+o Login mediante número de teléfono
+• Funcionalidades para Clientes:
+o Ver actividades disponibles
+o Ver sus pedidos y estado de pagos
+o Registrar nuevos pedidos
+o Subir comprobantes de pago
+o Proceso de verificación mediante pregunta de validación antes de
+confirmar cualquier operación
+Requisitos No Funcionales
+1. Seguridad
+• Autenticación y autorización robusta
+• Protección contra inyecciones SQL y XSS
+• Validación de datos en front y backend
+• Encriptación de datos sensibles
+2. Usabilidad
+• Interfaz responsiva (móvil, tablet, escritorio)
+• Diseño intuitivo y amigable
+• Mensajes de error claros
+• Flujos de usuario optimizados
+3. Rendimiento
+• Tiempos de carga rápidos
+• Optimización de imágenes
+• Caché adecuado
+4. Escalabilidad
+• Arquitectura que permita crecimiento
+• Base de datos optimizada
+Modelo de Datos (Esquema)
+Tabla: Actividades
+• id (PK)
+• titulo
+• descripcion
+• fecha_actividad
+• lugar
+• estado
+• imagen_promocional
+• fecha_creacion
+• fecha_actualizacion
+Tabla: Opciones
+• id (PK)
+• actividad_id (FK)
+• nombre
+• fecha_creacion
+• fecha_actualizacion
+Tabla: Clientes
+• id (PK)
+• nombre_completo
+• correo
+• documento_identidad
+• telefono
+• pregunta_validacion
+• respuesta_validacion
+• fecha_creacion
+• fecha_actualizacion
+Tabla: Pedidos
+• id (PK)
+• actividad_id (FK)
+• cliente_id (FK)
+• opcion_id (FK)
+• cantidad
+• costo_unitario
+• costo_total
+• estado_pago
+• imagen_comprobante
+• fecha_pedido
+• fecha_pago
+• fecha_actualizacion
+Tabla: Usuarios
+• id (PK)
+• cliente_id (FK, opcional para usuarios clientes)
+• nombre_usuario
+• contraseña
+• rol (admin, cliente)
+• ultimo_acceso
+Flujos de Usuario
+1. Flujo Administrativo
+1. Administrador crea una nueva actividad
+2. Administrador define opciones/productos para la actividad
+3. Administrador puede registrar clientes
+4. Administrador puede registrar pedidos en nombre de clientes (sin validación de
+pregunta)
+5. Administrador puede ver, filtrar y actualizar el estado de los pagos
+6. Administrador puede generar reportes de actividades
+2. Flujo de Cliente
+1. Cliente ingresa con su número de teléfono
+2. Cliente ve actividades disponibles
+3. Cliente selecciona una actividad y productos
+4. Cliente indica cantidad y sube comprobante de pago
+5. Sistema solicita responder pregunta de validación
+6. Si la respuesta es correcta, se registra el pedido
+7. Cliente puede ver historial de sus pedidos
+Tecnologías Requeridas
+• Frontend: React.js con Tailwind CSS
+• Backend: Node.js (Express)
+• Base de Datos: MongoDB con Mongoose como ODM
+• Autenticación: JWT
+• Almacenamiento de archivos: AWS S3 o similar
+• Despliegue: Docker, AWS, Heroku, o similar
+Consideraciones Adicionales
+• Implementar notificaciones por correo electrónico para confirmación de pedidos
+y pagos
+• Considerar la posibilidad de integración con pasarelas de pago
+• Implementar backup automatizado de la base de datos
+• Diseñar pensando en la posibilidad de añadir más tipos de actividades en el futuro
+• Implementar un sistema de logs para auditoría
+Entregables Esperados
+1. Código fuente completo (frontend y backend)
+2. Documentación de la API
+3. Manual de usuario (administrador y cliente)
+4. Scripts de base de datos (creación y datos iniciales)
+5. Instrucciones de despliegue
+6. Pruebas unitarias y de integración
