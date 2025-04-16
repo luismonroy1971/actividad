@@ -18,11 +18,27 @@ const Actividades = () => {
   
   useEffect(() => {
     if (actividades) {
+      console.log('Actividades recibidas:', actividades);
+      // Verificar si la respuesta tiene estructura anidada
+      let actividadesArray = [];
+      
+      if (Array.isArray(actividades)) {
+        actividadesArray = actividades;
+      } else if (actividades.data && Array.isArray(actividades.data)) {
+        actividadesArray = actividades.data;
+      } else if (typeof actividades === 'object') {
+        // Si es un objeto pero no tiene propiedad data, intentar usarlo directamente
+        actividadesArray = [actividades];
+      }
+      
+      console.log('Actividades procesadas:', actividadesArray);
+      
       // Filtrar actividades por término de búsqueda
-      const filtered = actividades.filter(actividad => 
-        actividad.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        actividad.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = actividadesArray.filter(actividad => 
+        (actividad?.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        actividad?.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()))
       )
+      console.log('Actividades filtradas:', filtered);
       setFilteredActividades(filtered)
     }
   }, [actividades, searchTerm])
@@ -103,25 +119,25 @@ const Actividades = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredActividades.map((actividad) => (
-                  <tr key={actividad.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{actividad.nombre}</td>
+                  <tr key={actividad._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{actividad.titulo}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(actividad.fecha).toLocaleDateString()}
+                      {new Date(actividad.fecha_actividad).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{actividad.ubicacion}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${actividad.precio.toFixed(2)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{actividad.lugar}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${actividad.precio ? actividad.precio.toFixed(2) : '0.00'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Link to={`/admin/actividades/editar/${actividad.id}`} className="text-primary-600 hover:text-primary-900 mr-4">
+                      <Link to={`/admin/actividades/editar/${actividad._id}`} className="text-primary-600 hover:text-primary-900 mr-4">
                         Editar
                       </Link>
-                      <Link to={`/actividades/${actividad.id}`} className="text-gray-600 hover:text-gray-900 mr-4">
+                      <Link to={`/actividades/${actividad._id}`} className="text-gray-600 hover:text-gray-900 mr-4">
                         Ver
                       </Link>
                       <button 
-                        onClick={() => handleDelete(actividad.id)} 
-                        className={`${confirmDelete === actividad.id ? 'text-red-600 font-medium' : 'text-gray-600 hover:text-red-900'}`}
+                        onClick={() => handleDelete(actividad._id)} 
+                        className={`${confirmDelete === actividad._id ? 'text-red-600 font-medium' : 'text-gray-600 hover:text-red-900'}`}
                       >
-                        {confirmDelete === actividad.id ? '¿Confirmar?' : 'Eliminar'}
+                        {confirmDelete === actividad._id ? '¿Confirmar?' : 'Eliminar'}
                       </button>
                     </td>
                   </tr>

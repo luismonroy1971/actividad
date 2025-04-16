@@ -10,16 +10,16 @@ const ActividadForm = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   
-  const { actividad, loading, error, success } = useSelector((state) => state.actividad)
+  const { actividad, loading, error, success } = useSelector((state) => state.actividades)
   
   const [formData, setFormData] = useState({
-    nombre: '',
+    titulo: '',
     descripcion: '',
-    fecha: '',
-    ubicacion: '',
+    fecha_actividad: '',
+    lugar: '',
     precio: '',
     requisitos: '',
-    imagen: ''
+    imagen_promocional: ''
   })
   
   const [submitted, setSubmitted] = useState(false)
@@ -31,13 +31,13 @@ const ActividadForm = () => {
     } else {
       // Limpiar el estado si estamos creando una nueva actividad
       setFormData({
-        nombre: '',
+        titulo: '',
         descripcion: '',
-        fecha: '',
-        ubicacion: '',
+        fecha_actividad: '',
+        lugar: '',
         precio: '',
         requisitos: '',
-        imagen: ''
+        imagen_promocional: ''
       })
     }
   }, [dispatch, id])
@@ -46,13 +46,13 @@ const ActividadForm = () => {
   useEffect(() => {
     if (id && actividad && actividad.id === parseInt(id)) {
       setFormData({
-        nombre: actividad.nombre || '',
+        titulo: actividad.titulo || '',
         descripcion: actividad.descripcion || '',
-        fecha: actividad.fecha ? new Date(actividad.fecha).toISOString().split('T')[0] : '',
-        ubicacion: actividad.ubicacion || '',
+        fecha_actividad: actividad.fecha_actividad ? new Date(actividad.fecha_actividad).toISOString().split('T')[0] : '',
+        lugar: actividad.lugar || '',
         precio: actividad.precio || '',
         requisitos: actividad.requisitos || '',
-        imagen: actividad.imagen || ''
+        imagen_promocional: actividad.imagen_promocional || ''
       })
     }
   }, [id, actividad])
@@ -61,8 +61,20 @@ const ActividadForm = () => {
   useEffect(() => {
     if (submitted && success) {
       navigate('/admin/actividades')
+      // Resetear el estado después de la redirección
+      dispatch({ type: 'actividades/resetActividadSuccess' })
+      setSubmitted(false)
     }
-  }, [success, submitted, navigate])
+  }, [success, submitted, navigate, dispatch])
+  
+  // Resetear el estado de éxito cuando se desmonte el componente
+  useEffect(() => {
+    return () => {
+      if (success) {
+        dispatch({ type: 'actividades/resetActividadSuccess' })
+      }
+    }
+  }, [dispatch, success])
   
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -76,7 +88,7 @@ const ActividadForm = () => {
     e.preventDefault()
     
     // Validar campos requeridos
-    if (!formData.nombre || !formData.descripcion || !formData.fecha || !formData.precio) {
+    if (!formData.titulo || !formData.descripcion || !formData.fecha_actividad || !formData.lugar) {
       return alert('Por favor completa todos los campos requeridos')
     }
     
@@ -116,16 +128,16 @@ const ActividadForm = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Nombre */}
+              {/* Título */}
               <div>
-                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre <span className="text-red-500">*</span>
+                <label htmlFor="titulo" className="block text-sm font-medium text-gray-700 mb-1">
+                  Título <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="nombre"
-                  name="nombre"
-                  value={formData.nombre}
+                  id="titulo"
+                  name="titulo"
+                  value={formData.titulo}
                   onChange={handleChange}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   required
@@ -134,32 +146,33 @@ const ActividadForm = () => {
               
               {/* Fecha */}
               <div>
-                <label htmlFor="fecha" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="fecha_actividad" className="block text-sm font-medium text-gray-700 mb-1">
                   Fecha <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
-                  id="fecha"
-                  name="fecha"
-                  value={formData.fecha}
+                  id="fecha_actividad"
+                  name="fecha_actividad"
+                  value={formData.fecha_actividad}
                   onChange={handleChange}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   required
                 />
               </div>
               
-              {/* Ubicación */}
+              {/* Lugar */}
               <div>
-                <label htmlFor="ubicacion" className="block text-sm font-medium text-gray-700 mb-1">
-                  Ubicación
+                <label htmlFor="lugar" className="block text-sm font-medium text-gray-700 mb-1">
+                  Lugar <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="ubicacion"
-                  name="ubicacion"
-                  value={formData.ubicacion}
+                  id="lugar"
+                  name="lugar"
+                  value={formData.lugar}
                   onChange={handleChange}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  required
                 />
               </div>
               
@@ -220,23 +233,23 @@ const ActividadForm = () => {
             
             {/* URL de imagen */}
             <div>
-              <label htmlFor="imagen" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="imagen_promocional" className="block text-sm font-medium text-gray-700 mb-1">
                 URL de imagen
               </label>
               <input
                 type="url"
-                id="imagen"
-                name="imagen"
-                value={formData.imagen}
+                id="imagen_promocional"
+                name="imagen_promocional"
+                value={formData.imagen_promocional}
                 onChange={handleChange}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 placeholder="https://ejemplo.com/imagen.jpg"
               />
-              {formData.imagen && (
+              {formData.imagen_promocional && (
                 <div className="mt-2">
                   <p className="text-sm text-gray-500 mb-1">Vista previa:</p>
                   <img 
-                    src={formData.imagen} 
+                    src={formData.imagen_promocional} 
                     alt="Vista previa" 
                     className="h-32 w-auto object-cover rounded-md border border-gray-300"
                     onError={(e) => e.target.src = 'https://via.placeholder.com/300x200?text=Imagen+no+disponible'}

@@ -19,12 +19,18 @@ const Clientes = () => {
   useEffect(() => {
     if (clientes) {
       // Filtrar clientes por término de búsqueda
-      const filtered = clientes.filter(cliente => 
-        cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cliente.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (cliente.telefono && cliente.telefono.includes(searchTerm))
-      )
+      const filtered = clientes.filter(cliente => {
+        // Verificar que el cliente y sus propiedades existan antes de aplicar toLowerCase
+        const nombreCompleto = cliente.nombre_completo ? cliente.nombre_completo.toLowerCase() : '';
+        const correo = cliente.correo ? cliente.correo.toLowerCase() : '';
+        const documento = cliente.documento_identidad ? cliente.documento_identidad.toLowerCase() : '';
+        const telefono = cliente.telefono ? cliente.telefono.toLowerCase() : '';
+        
+        return nombreCompleto.includes(searchTerm.toLowerCase()) ||
+               correo.includes(searchTerm.toLowerCase()) ||
+               documento.includes(searchTerm.toLowerCase()) ||
+               telefono.includes(searchTerm.toLowerCase());
+      })
       setFilteredClientes(filtered)
     }
   }, [clientes, searchTerm])
@@ -96,28 +102,28 @@ const Clientes = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre Completo</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dirección</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredClientes.map((cliente) => (
-                  <tr key={cliente.id} className="hover:bg-gray-50">
+                  <tr key={cliente.id || cliente._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {cliente.nombre} {cliente.apellido}
+                      {cliente.nombre_completo || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.correo || 'N/A'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.telefono || 'N/A'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.direccion || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.documento_identidad || 'N/A'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Link to={`/admin/clientes/editar/${cliente.id}`} className="text-primary-600 hover:text-primary-900 mr-4">
+                      <Link to={`/admin/clientes/editar/${cliente.id || cliente._id}`} className="text-primary-600 hover:text-primary-900 mr-4">
                         Editar
                       </Link>
                       <button 
-                        onClick={() => handleDelete(cliente.id)} 
+                        onClick={() => handleDelete(cliente.id || cliente._id)} 
                         className={`${confirmDelete === cliente.id ? 'text-red-600 font-medium' : 'text-gray-600 hover:text-red-900'}`}
                       >
                         {confirmDelete === cliente.id ? '¿Confirmar?' : 'Eliminar'}

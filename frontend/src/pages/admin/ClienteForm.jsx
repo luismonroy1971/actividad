@@ -10,15 +10,15 @@ const ClienteForm = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   
-  const { cliente, loading, error, success } = useSelector((state) => state.cliente)
+  const { cliente, loading, error, success } = useSelector((state) => state.clientes)
   
   const [formData, setFormData] = useState({
-    nombre: '',
-    apellido: '',
-    email: '',
+    nombre_completo: '',
+    correo: '',
+    documento_identidad: '',
     telefono: '',
-    direccion: '',
-    password: ''
+    pregunta_validacion: '',
+    respuesta_validacion: ''
   })
   
   const [submitted, setSubmitted] = useState(false)
@@ -30,26 +30,26 @@ const ClienteForm = () => {
     } else {
       // Limpiar el estado si estamos creando un nuevo cliente
       setFormData({
-        nombre: '',
-        apellido: '',
-        email: '',
+        nombre_completo: '',
+        correo: '',
+        documento_identidad: '',
         telefono: '',
-        direccion: '',
-        password: ''
+        pregunta_validacion: '',
+        respuesta_validacion: ''
       })
     }
   }, [dispatch, id])
   
   // Llenar el formulario con los datos del cliente cuando se carga
   useEffect(() => {
-    if (id && cliente && cliente.id === parseInt(id)) {
+    if (id && cliente && cliente._id === id) {
       setFormData({
-        nombre: cliente.nombre || '',
-        apellido: cliente.apellido || '',
-        email: cliente.email || '',
+        nombre_completo: cliente.nombre_completo || '',
+        correo: cliente.correo || '',
+        documento_identidad: cliente.documento_identidad || '',
         telefono: cliente.telefono || '',
-        direccion: cliente.direccion || '',
-        password: '' // No mostrar la contraseña por seguridad
+        pregunta_validacion: cliente.pregunta_validacion || '',
+        respuesta_validacion: cliente.respuesta_validacion || ''
       })
     }
   }, [id, cliente])
@@ -72,25 +72,33 @@ const ClienteForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault()
     
-    // Validar campos requeridos
-    if (!formData.nombre || !formData.apellido || !formData.email) {
-      return alert('Por favor completa todos los campos requeridos')
+    // Validar campos requeridos y eliminar espacios en blanco
+    const trimmedData = {
+      nombre_completo: formData.nombre_completo?.trim() || '',
+      correo: formData.correo?.trim() || '',
+      documento_identidad: formData.documento_identidad?.trim() || '',
+      telefono: formData.telefono?.trim() || '',
+      pregunta_validacion: formData.pregunta_validacion?.trim() || '',
+      respuesta_validacion: formData.respuesta_validacion?.trim() || ''
     }
     
-    const clienteData = {
-      ...formData,
-      rol: 'cliente' // Asegurarse de que se crea como cliente
+    // Verificar que no haya campos vacíos después del trim
+    for (const [key, value] of Object.entries(trimmedData)) {
+      if (!value) {
+        return alert(`El campo ${key.replace('_', ' ')} no puede estar vacío`)
+      }
     }
     
-    // Si no hay contraseña y estamos editando, eliminarla del objeto
-    if (id && !formData.password) {
-      delete clienteData.password
+    // Validar formato de correo electrónico
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
+    if (!emailRegex.test(trimmedData.correo)) {
+      return alert('Por favor ingrese un correo electrónico válido')
     }
     
     if (id) {
-      dispatch(updateCliente({ id, clienteData }))
+      dispatch(updateCliente({ id, clienteData: trimmedData }))
     } else {
-      dispatch(createCliente(clienteData))
+      dispatch(createCliente(trimmedData))
     }
     
     setSubmitted(true)
@@ -118,48 +126,48 @@ const ClienteForm = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Nombre */}
+              {/* Nombre Completo */}
               <div>
-                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre <span className="text-red-500">*</span>
+                <label htmlFor="nombre_completo" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre Completo <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="nombre"
-                  name="nombre"
-                  value={formData.nombre}
+                  id="nombre_completo"
+                  name="nombre_completo"
+                  value={formData.nombre_completo}
                   onChange={handleChange}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   required
                 />
               </div>
               
-              {/* Apellido */}
+              {/* Correo */}
               <div>
-                <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 mb-1">
-                  Apellido <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="apellido"
-                  name="apellido"
-                  value={formData.apellido}
-                  onChange={handleChange}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                  required
-                />
-              </div>
-              
-              {/* Email */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email <span className="text-red-500">*</span>
+                <label htmlFor="correo" className="block text-sm font-medium text-gray-700 mb-1">
+                  Correo Electrónico <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
+                  id="correo"
+                  name="correo"
+                  value={formData.correo}
+                  onChange={handleChange}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  required
+                />
+              </div>
+              
+              {/* Documento de Identidad */}
+              <div>
+                <label htmlFor="documento_identidad" className="block text-sm font-medium text-gray-700 mb-1">
+                  Documento de Identidad <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="documento_identidad"
+                  name="documento_identidad"
+                  value={formData.documento_identidad}
                   onChange={handleChange}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   required
@@ -169,7 +177,7 @@ const ClienteForm = () => {
               {/* Teléfono */}
               <div>
                 <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono
+                  Teléfono <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -178,59 +186,59 @@ const ClienteForm = () => {
                   value={formData.telefono}
                   onChange={handleChange}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  required
                 />
               </div>
             </div>
             
-            {/* Dirección */}
+            {/* Pregunta de Validación */}
             <div>
-              <label htmlFor="direccion" className="block text-sm font-medium text-gray-700 mb-1">
-                Dirección
+              <label htmlFor="pregunta_validacion" className="block text-sm font-medium text-gray-700 mb-1">
+                Pregunta de Validación <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                id="direccion"
-                name="direccion"
-                value={formData.direccion}
+                id="pregunta_validacion"
+                name="pregunta_validacion"
+                value={formData.pregunta_validacion}
                 onChange={handleChange}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                required
+                placeholder="Ej: ¿Cuál es tu color favorito?"
               />
             </div>
             
-            {/* Contraseña */}
+            {/* Respuesta de Validación */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                {id ? 'Nueva Contraseña (dejar en blanco para mantener la actual)' : 'Contraseña'} {!id && <span className="text-red-500">*</span>}
+              <label htmlFor="respuesta_validacion" className="block text-sm font-medium text-gray-700 mb-1">
+                Respuesta de Validación <span className="text-red-500">*</span>
               </label>
               <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
+                type="text"
+                id="respuesta_validacion"
+                name="respuesta_validacion"
+                value={formData.respuesta_validacion}
                 onChange={handleChange}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                required={!id} // Solo requerido para nuevos clientes
-                minLength="6"
+                required
               />
             </div>
-            
-            {/* Botones */}
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={() => navigate('/admin/clientes')}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                disabled={loading}
-              >
-                {loading ? 'Guardando...' : id ? 'Actualizar' : 'Crear'}
-              </button>
-            </div>
+              {/* Botones de acción */}
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => navigate('/admin/clientes')}
+                  className="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  {id ? 'Actualizar' : 'Crear'}
+                </button>
+              </div>
           </form>
         </div>
       )}

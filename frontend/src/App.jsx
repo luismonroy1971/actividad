@@ -20,7 +20,7 @@ import ClientePedidoDetalle from './pages/cliente/PedidoDetalle'
 
 // Páginas de administrador
 import AdminDashboard from './pages/admin/Dashboard'
-import AdminActividades from './pages/admin/Actividades'
+import Actividades from './pages/admin/Actividades'
 import AdminActividadForm from './pages/admin/ActividadForm'
 import AdminClientes from './pages/admin/Clientes'
 import AdminClienteForm from './pages/admin/ClienteForm'
@@ -66,13 +66,13 @@ function App() {
       <Route 
         path="/admin" 
         element={
-          userInfo && userInfo.rol === 'admin' ? 
+          userInfo && (userInfo.rol === 'admin' || userInfo.rol === 'superadmin' || userInfo.rol === 'admin_actividad') ? 
           <AdminLayout /> : 
           <Navigate to="/login" replace />
         }
       >
         <Route index element={<AdminDashboard />} />
-        <Route path="actividades" element={<AdminActividades />} />
+        <Route path="actividades" element={<Actividades />} />
         <Route path="actividades/crear" element={<AdminActividadForm />} />
         <Route path="actividades/editar/:id" element={<AdminActividadForm />} />
         <Route path="clientes" element={<AdminClientes />} />
