@@ -7,40 +7,39 @@ import Message from '../../components/Message'
 
 const Actividades = () => {
   const dispatch = useDispatch()
+  
+  // Obtener el estado del slice de actividades
   const { actividades, loading, error, success } = useSelector((state) => state.actividades)
+  
   const [filteredActividades, setFilteredActividades] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(null)
   
+  // Cargar actividades al montar el componente o cuando cambia success
   useEffect(() => {
     dispatch(fetchActividades())
+    console.log("Solicitando actividades al API...")
   }, [dispatch, success])
   
+  // Procesar y filtrar actividades cuando cambian
   useEffect(() => {
-    if (actividades) {
-      console.log('Actividades recibidas:', actividades);
-      // Verificar si la respuesta tiene estructura anidada
-      let actividadesArray = [];
-      
-      if (Array.isArray(actividades)) {
-        actividadesArray = actividades;
-      } else if (actividades.data && Array.isArray(actividades.data)) {
-        actividadesArray = actividades.data;
-      } else if (typeof actividades === 'object') {
-        // Si es un objeto pero no tiene propiedad data, intentar usarlo directamente
-        actividadesArray = [actividades];
-      }
-      
-      console.log('Actividades procesadas:', actividadesArray);
-      
-      // Filtrar actividades por término de búsqueda
-      const filtered = actividadesArray.filter(actividad => 
-        (actividad?.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        actividad?.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()))
-      )
-      console.log('Actividades filtradas:', filtered);
-      setFilteredActividades(filtered)
+    console.log('Actividades recibidas en el componente:', actividades);
+    
+    // Si no hay actividades, no procesamos
+    if (!actividades) {
+      console.log('No hay actividades disponibles');
+      setFilteredActividades([]);
+      return;
     }
+    
+    // Aplicar filtro por término de búsqueda
+    const filtered = actividades.filter(actividad => 
+      (actividad?.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       actividad?.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    
+    console.log('Actividades filtradas:', filtered);
+    setFilteredActividades(filtered);
   }, [actividades, searchTerm])
 
   const handleDelete = (id) => {
@@ -113,7 +112,7 @@ const Actividades = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
@@ -125,7 +124,7 @@ const Actividades = () => {
                       {new Date(actividad.fecha_actividad).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{actividad.lugar}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${actividad.precio ? actividad.precio.toFixed(2) : '0.00'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{actividad.estado}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <Link to={`/admin/actividades/editar/${actividad._id}`} className="text-primary-600 hover:text-primary-900 mr-4">
                         Editar

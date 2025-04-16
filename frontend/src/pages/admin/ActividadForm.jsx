@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getActividadById, createActividad, updateActividad } from '../../store/slices/actividadSlice'
+import { getActividadById, createActividad, updateActividad, resetActividadSuccess } from '../../store/slices/actividadSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
 
@@ -44,15 +44,20 @@ const ActividadForm = () => {
   
   // Llenar el formulario con los datos de la actividad cuando se carga
   useEffect(() => {
-    if (id && actividad && actividad.id === parseInt(id)) {
+    if (id && actividad) {
+      console.log('Actividad cargada para edición:', actividad);
+      
+      // Obtener los datos de la actividad, ya sea de actividad directamente o de actividad.data
+      const actividadData = actividad.data ? actividad.data : actividad;
+      
       setFormData({
-        titulo: actividad.titulo || '',
-        descripcion: actividad.descripcion || '',
-        fecha_actividad: actividad.fecha_actividad ? new Date(actividad.fecha_actividad).toISOString().split('T')[0] : '',
-        lugar: actividad.lugar || '',
-        precio: actividad.precio || '',
-        requisitos: actividad.requisitos || '',
-        imagen_promocional: actividad.imagen_promocional || ''
+        titulo: actividadData.titulo || '',
+        descripcion: actividadData.descripcion || '',
+        fecha_actividad: actividadData.fecha_actividad ? new Date(actividadData.fecha_actividad).toISOString().split('T')[0] : '',
+        lugar: actividadData.lugar || '',
+        precio: actividadData.precio || 0,
+        requisitos: actividadData.requisitos || '',
+        imagen_promocional: actividadData.imagen_promocional || ''
       })
     }
   }, [id, actividad])
@@ -62,7 +67,7 @@ const ActividadForm = () => {
     if (submitted && success) {
       navigate('/admin/actividades')
       // Resetear el estado después de la redirección
-      dispatch({ type: 'actividades/resetActividadSuccess' })
+      dispatch(resetActividadSuccess())
       setSubmitted(false)
     }
   }, [success, submitted, navigate, dispatch])
@@ -71,7 +76,7 @@ const ActividadForm = () => {
   useEffect(() => {
     return () => {
       if (success) {
-        dispatch({ type: 'actividades/resetActividadSuccess' })
+        dispatch(resetActividadSuccess())
       }
     }
   }, [dispatch, success])
@@ -94,7 +99,7 @@ const ActividadForm = () => {
     
     const actividadData = {
       ...formData,
-      precio: parseFloat(formData.precio)
+      precio: parseFloat(formData.precio) || 0
     }
     
     if (id) {

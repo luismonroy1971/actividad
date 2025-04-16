@@ -31,7 +31,12 @@ const Dashboard = () => {
       const fechaActual = new Date()
       const actividadesProximas = actividades.filter(act => new Date(act.fecha) > fechaActual)
       const pedidosPendientes = pedidos.filter(ped => ped.estado === 'pendiente')
-      const ingresoTotal = pedidos.reduce((total, pedido) => total + pedido.total, 0)
+      
+      // Añadir comprobación para evitar error si algún pedido no tiene propiedad total
+      const ingresoTotal = pedidos.reduce((total, pedido) => {
+        const pedidoTotal = pedido.total || 0
+        return total + pedidoTotal
+      }, 0)
 
       setEstadisticas({
         totalActividades: actividades.length,
@@ -143,10 +148,12 @@ const Dashboard = () => {
                   <tr key={actividad.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{actividad.nombre}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(actividad.fecha).toLocaleDateString()}
+                      {actividad.fecha ? new Date(actividad.fecha).toLocaleDateString() : 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{actividad.ubicacion}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${actividad.precio.toFixed(2)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{actividad.ubicacion || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ${(actividad.precio || 0).toFixed(2)}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <Link to={`/admin/actividades/editar/${actividad.id}`} className="text-primary-600 hover:text-primary-900 mr-4">
                         Editar
@@ -202,7 +209,7 @@ const Dashboard = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{pedido.cliente?.nombre || 'N/A'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{pedido.actividad?.nombre || 'N/A'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(pedido.fecha_pedido).toLocaleDateString()}
+                      {pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -211,11 +218,11 @@ const Dashboard = () => {
                         pedido.estado === 'cancelado' ? 'bg-red-100 text-red-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1)}
+                        {pedido.estado ? (pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1)) : 'N/A'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${pedido.total.toFixed(2)}
+                      ${(pedido.total || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <Link to={`/admin/pedidos/${pedido.id}`} className="text-primary-600 hover:text-primary-900">

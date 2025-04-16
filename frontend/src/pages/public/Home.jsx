@@ -19,7 +19,7 @@ const Home = () => {
     if (actividades && Array.isArray(actividades)) {
       // Filtrar actividades por término de búsqueda
       const filtered = actividades.filter(actividad => 
-        actividad.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        actividad.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         actividad.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
       )
       setFilteredActividades(filtered)
@@ -78,29 +78,29 @@ const Home = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredActividades.map((actividad) => (
-              <div key={actividad.id} className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow">
-                {actividad.imagen && (
+              <div key={actividad._id} className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow">
+                {actividad.imagen_promocional && (
                   <div className="h-48 bg-gray-200 overflow-hidden">
                     <img 
-                      src={actividad.imagen} 
-                      alt={actividad.nombre} 
+                      src={actividad.imagen_promocional} 
+                      alt={actividad.titulo} 
                       className="w-full h-full object-cover"
                     />
                   </div>
                 )}
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-semibold text-gray-900">{actividad.nombre}</h3>
+                    <h3 className="text-xl font-semibold text-gray-900">{actividad.titulo}</h3>
                     <span className="bg-primary-100 text-primary-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                      ${actividad.precio.toFixed(2)}
+                      ${actividad.precio ? actividad.precio.toFixed(2) : '0.00'}
                     </span>
                   </div>
                   <p className="text-sm text-gray-500 mb-2">
-                    {new Date(actividad.fecha).toLocaleDateString()} | {actividad.ubicacion}
+                    {new Date(actividad.fecha_actividad).toLocaleDateString()} | {actividad.lugar}
                   </p>
                   <p className="text-gray-700 mb-4 line-clamp-3">{actividad.descripcion}</p>
                   <Link 
-                    to={`/actividades/${actividad.id}`}
+                    to={`/actividades/${actividad._id}`}
                     className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
                   >
                     Ver detalles

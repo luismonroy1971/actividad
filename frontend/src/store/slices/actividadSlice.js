@@ -198,61 +198,110 @@ const actividadSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Get All Actividades
+      // fetchActividades
+      .addCase(fetchActividades.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(fetchActividades.fulfilled, (state, action) => {
+        state.loading = false
+        console.log('Respuesta API en fetchActividades:', action.payload)
+        
+        // Extraer específicamente el array de 'data' de la respuesta
+        if (action.payload && action.payload.data) {
+          state.actividades = action.payload.data
+          state.pagination = action.payload.pagination || {}
+        } else {
+          // Fallback en caso de que la estructura sea diferente
+          state.actividades = Array.isArray(action.payload) ? action.payload : []
+        }
+      })
+      .addCase(fetchActividades.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      
+      // getActividades
       .addCase(getActividades.pending, (state) => {
         state.loading = true
       })
       .addCase(getActividades.fulfilled, (state, action) => {
         state.loading = false
-        state.actividades = action.payload.data
-        state.pagination = action.payload.pagination
+        console.log('Respuesta API en getActividades:', action.payload)
+        
+        // Extraer específicamente el array de 'data' de la respuesta
+        if (action.payload && action.payload.data) {
+          state.actividades = action.payload.data
+          state.pagination = action.payload.pagination || {}
+        } else {
+          // Fallback en caso de que la estructura sea diferente
+          state.actividades = Array.isArray(action.payload) ? action.payload : []
+        }
       })
       .addCase(getActividades.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })
-      // Get Actividad By ID
+      
+      // getActividadById
       .addCase(getActividadById.pending, (state) => {
         state.loading = true
       })
       .addCase(getActividadById.fulfilled, (state, action) => {
         state.loading = false
-        state.actividad = action.payload.data
+        console.log('Respuesta API en getActividadById:', action.payload)
+        
+        // Extraer la actividad de la respuesta
+        if (action.payload && action.payload.data) {
+          state.actividad = action.payload.data
+        } else {
+          state.actividad = action.payload
+        }
       })
       .addCase(getActividadById.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })
-      // Create Actividad
+      
+      // createActividad
       .addCase(createActividad.pending, (state) => {
         state.loading = true
       })
       .addCase(createActividad.fulfilled, (state, action) => {
         state.loading = false
         state.success = true
-        state.actividades.push(action.payload.data)
+        
+        // Extraer la actividad creada de la respuesta
+        const nuevaActividad = action.payload.data || action.payload
+        
+        state.actividades.push(nuevaActividad)
       })
       .addCase(createActividad.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })
-      // Update Actividad
+      
+      // updateActividad
       .addCase(updateActividad.pending, (state) => {
         state.loading = true
       })
       .addCase(updateActividad.fulfilled, (state, action) => {
         state.loading = false
         state.success = true
-        state.actividad = action.payload.data
+        
+        // Extraer la actividad actualizada de la respuesta
+        const actividadActualizada = action.payload.data || action.payload
+        
+        state.actividad = actividadActualizada
         state.actividades = state.actividades.map((actividad) =>
-          actividad._id === action.payload.data._id ? action.payload.data : actividad
+          actividad._id === actividadActualizada._id ? actividadActualizada : actividad
         )
       })
       .addCase(updateActividad.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })
-      // Delete Actividad
+      
+      // deleteActividad
       .addCase(deleteActividad.pending, (state) => {
         state.loading = true
       })
@@ -267,7 +316,8 @@ const actividadSlice = createSlice({
         state.loading = false
         state.error = action.payload
       })
-      // Upload Image
+      
+      // uploadActividadImage
       .addCase(uploadActividadImage.pending, (state) => {
         state.loading = true
       })

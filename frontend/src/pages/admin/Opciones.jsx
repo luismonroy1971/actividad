@@ -1,45 +1,118 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
-import { getOpciones, deleteOpcion } from '../../store/slices/opcionSlice'
+import { fetchOpciones, deleteOpcion } from '../../store/slices/opcionSlice'
+import { fetchActividades } from '../../store/slices/actividadSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
 
 const Opciones = () => {
   const dispatch = useDispatch()
   const { opciones, loading, error, success } = useSelector((state) => state.opciones)
+  const { actividades } = useSelector((state) => state.actividades)
   const [filteredOpciones, setFilteredOpciones] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterActividad, setFilterActividad] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(null)
   
   useEffect(() => {
-    dispatch(getOpciones())
+    dispatch(fetchOpciones())
+    dispatch(fetchActividades())
+    console.log('Solicitando opciones y actividades al API...')
   }, [dispatch, success])
   
   useEffect(() => {
+    console.log('Opciones recibidas:', opciones)
+    
+    // Determinar el array de opciones basado en la estructura recibida
+    let opcionesArray = []
+    
     if (opciones) {
-      // Filtrar opciones por término de búsqueda y actividad
-      let filtered = [...opciones]
-      
-      if (searchTerm) {
-        filtered = filtered.filter(opcion => 
-          opcion.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          opcion.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+      if (Array.isArray(opciones)) {
+        opcionesArray = opciones
+      } else if (opciones.data && Array.isArray(opciones.data)) {
+        opcionesArray = opciones.data
       }
-      
-      if (filterActividad) {
-        filtered = filtered.filter(opcion => opcion.actividad_id === parseInt(filterActividad))
-      }
-      
-      setFilteredOpciones(filtered)
     }
+    
+    if (opcionesArray.length === 0) {
+      console.log('No hay opciones disponibles')
+      setFilteredOpciones([])
+      return
+    }
+    
+    // Filtrar opciones por término de búsqueda
+    let filtered = [...opcionesArray]
+    
+    if (searchTerm) {
+      filtered = filtered.filter(opcion => 
+        opcion.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+    
+    if (filterActividad) {
+      filtered = filtered.filter(opcion => 
+        opcion.actividad_id === filterActividad || 
+        opcion.actividad_id?.toString() === filterActividad
+      )
+    }
+    
+    console.log('Opciones filtradas:', filtered)
+    setFilteredOpciones(filtered)
   }, [opciones, searchTerm, filterActividad])
 
-  const handleDelete = (id) => {
-    if (window.confirm('¿Estás seguro de eliminar esta opción? Esta acción no se puede deshacer.')) {
-      dispatch(deleteOpcion(id))
+  // Función para obtener el nombre de la actividad por ID
+  const getActividadNombre = (actividadId) => {
+    if (!actividadId) {
+      return 'Sin actividad asignada'
     }
+    
+    // Determinar el array de actividades
+    let actividadesArray = []
+    
+    if (actividades) {
+      if (Array.isArray(actividades)) {
+        actividadesArray = actividades
+      } else if (actividades.data && Array.isArray(actividades.data)) {
+        actividadesArray = actividades.data
+      }
+    }
+    
+    if (!actividadesArray || actividadesArray.length === 0) {
+      return 'Actividad no disponible'
+    }
+    
+    const actividad = actividadesArray.find(act => 
+      act._id === actividadId || 
+      act._id?.toString() === actividadId?.toString()
+    )
+    
+    return actividad ? actividad.titulo : 'Actividad no encontrada'
+  }
+
+  const handleDelete = (id) => {
+    if (confirmDelete === id) {
+      dispatch(deleteOpcion(id))
+      setConfirmDelete(null)
+    } else {
+      setConfirmDelete(id)
+    }
+  }
+
+  // Obtener lista única de actividades para el filtro
+  const getActividadesUnicas = () => {
+    if (!Array.isArray(opciones) || opciones.length === 0) {
+      return []
+    }
+    
+    // Extraer IDs únicos de actividades
+    const actividadesIds = [...new Set(
+      opciones
+        .filter(opcion => opcion?.actividad_id) // Asegurarnos de que actividad_id existe
+        .map(opcion => opcion.actividad_id?.toString()) // Convertir a string para comparación
+    )]
+    
+    return actividadesIds
   }
 
   return (
@@ -50,7 +123,10 @@ const Opciones = () => {
           to="/admin/opciones/crear"
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
-          Crear Nueva Opción
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          Nueva Opción
         </Link>
       </div>
       
@@ -81,15 +157,11 @@ const Opciones = () => {
               onChange={(e) => setFilterActividad(e.target.value)}
             >
               <option value="">Todas las actividades</option>
-              {/* Aquí se podrían mapear las actividades disponibles */}
-              {opciones && [...new Set(opciones.map(opcion => opcion.actividad_id))].map(actividadId => {
-                const actividad = opciones.find(o => o.actividad_id === actividadId)?.actividad
-                return actividad ? (
-                  <option key={actividadId} value={actividadId}>
-                    {actividad.nombre}
-                  </option>
-                ) : null
-              })}
+              {actividades && Array.isArray(actividades) && actividades.map(actividad => (
+                <option key={actividad._id} value={actividad._id}>
+                  {actividad.titulo}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -125,42 +197,26 @@ const Opciones = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actividad</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disponible</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredOpciones.map((opcion) => (
-                  <tr key={opcion.id} className="hover:bg-gray-50">
+                  <tr key={opcion._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{opcion.nombre}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {opcion.descripcion.length > 50 
-                        ? `${opcion.descripcion.substring(0, 50)}...` 
-                        : opcion.descripcion}
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${opcion.precio.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {opcion.actividad ? opcion.actividad.nombre : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${opcion.disponible ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {opcion.disponible ? 'Disponible' : 'No disponible'}
-                      </span>
+                      {getActividadNombre(opcion.actividad_id)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Link to={`/admin/opciones/editar/${opcion.id}`} className="text-primary-600 hover:text-primary-900 mr-4">
+                      <Link to={`/admin/opciones/editar/${opcion._id}`} className="text-primary-600 hover:text-primary-900 mr-4">
                         Editar
                       </Link>
                       <button
-                        onClick={() => handleDelete(opcion.id)}
-                        className="text-red-600 hover:text-red-900"
+                        onClick={() => handleDelete(opcion._id)}
+                        className={`${confirmDelete === opcion._id ? 'text-red-600 font-medium' : 'text-gray-600 hover:text-red-900'}`}
                       >
-                        Eliminar
+                        {confirmDelete === opcion._id ? '¿Confirmar?' : 'Eliminar'}
                       </button>
                     </td>
                   </tr>

@@ -10,16 +10,11 @@ const initialState = {
 }
 
 // Obtener todas las opciones
-export const getOpciones = createAsyncThunk(
-  'opciones/getAll',
-  async (actividadId = null, { rejectWithValue }) => {
+export const fetchOpciones = createAsyncThunk(
+  'opciones/fetchAll',
+  async (_, { rejectWithValue }) => {
     try {
-      let url = '/api/opciones'
-      if (actividadId) {
-        url += `?actividad_id=${actividadId}`
-      }
-      
-      const { data } = await axios.get(url)
+      const { data } = await axios.get('/api/opciones')
       return data
     } catch (error) {
       return rejectWithValue(
@@ -31,22 +26,8 @@ export const getOpciones = createAsyncThunk(
   }
 )
 
-// Obtener opciones por actividad
-export const getOpcionesPorActividad = createAsyncThunk(
-  'opciones/getByActividad',
-  async (actividadId, { rejectWithValue }) => {
-    try {
-      const { data } = await axios.get(`/api/actividades/${actividadId}/opciones`)
-      return data
-    } catch (error) {
-      return rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      )
-    }
-  }
-)
+// Alias para mantener compatibilidad
+export const getOpciones = fetchOpciones
 
 // Obtener una opción por ID
 export const getOpcionById = createAsyncThunk(
@@ -164,81 +145,109 @@ const opcionSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Get All Opciones
-      .addCase(getOpciones.pending, (state) => {
+      // fetchOpciones
+      .addCase(fetchOpciones.pending, (state) => {
         state.loading = true
       })
-      .addCase(getOpciones.fulfilled, (state, action) => {
+      .addCase(fetchOpciones.fulfilled, (state, action) => {
         state.loading = false
-        state.opciones = action.payload.data
+        console.log('Respuesta API en fetchOpciones:', action.payload)
+        
+        // Extraer específicamente el array de 'data' de la respuesta
+        if (action.payload && action.payload.data) {
+          state.opciones = action.payload.data
+        } else {
+          // Fallback en caso de que la estructura sea diferente
+          state.opciones = Array.isArray(action.payload) ? action.payload : []
+        }
       })
-      .addCase(getOpciones.rejected, (state, action) => {
+      .addCase(fetchOpciones.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })
-      // Get Opciones Por Actividad
-      .addCase(getOpcionesPorActividad.pending, (state) => {
-        state.loading = true
-      })
-      .addCase(getOpcionesPorActividad.fulfilled, (state, action) => {
-        state.loading = false
-        state.opciones = action.payload.data
-      })
-      .addCase(getOpcionesPorActividad.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload
-      })
-      // Get Opcion By ID
+      
+      // getOpcionById
       .addCase(getOpcionById.pending, (state) => {
         state.loading = true
       })
       .addCase(getOpcionById.fulfilled, (state, action) => {
         state.loading = false
-        state.opcion = action.payload.data
+        console.log('Respuesta API en getOpcionById:', action.payload)
+        
+        // Extraer la opción de la respuesta
+        if (action.payload && action.payload.data) {
+          state.opcion = action.payload.data
+        } else {
+          state.opcion = action.payload
+        }
       })
       .addCase(getOpcionById.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })
-      // Create Opcion
+      
+      // createOpcion
       .addCase(createOpcion.pending, (state) => {
         state.loading = true
       })
       .addCase(createOpcion.fulfilled, (state, action) => {
         state.loading = false
         state.success = true
-        state.opciones.push(action.payload.data)
+        
+        // Extraer la opción creada de la respuesta
+        const nuevaOpcion = action.payload.data || action.payload
+        
+        // Añadir a la lista de opciones si el array existe
+        if (Array.isArray(state.opciones)) {
+          state.opciones.push(nuevaOpcion)
+        } else {
+          state.opciones = [nuevaOpcion]
+        }
       })
       .addCase(createOpcion.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })
-      // Update Opcion
+      
+      // updateOpcion
       .addCase(updateOpcion.pending, (state) => {
         state.loading = true
       })
       .addCase(updateOpcion.fulfilled, (state, action) => {
         state.loading = false
         state.success = true
-        state.opcion = action.payload.data
-        state.opciones = state.opciones.map((opcion) =>
-          opcion._id === action.payload.data._id ? action.payload.data : opcion
-        )
+        
+        // Extraer la opción actualizada de la respuesta
+        const opcionActualizada = action.payload.data || action.payload
+        
+        state.opcion = opcionActualizada
+        
+        // Actualizar en el array de opciones si existe
+        if (Array.isArray(state.opciones)) {
+          state.opciones = state.opciones.map((opcion) =>
+            opcion._id === opcionActualizada._id ? opcionActualizada : opcion
+          )
+        }
       })
       .addCase(updateOpcion.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })
-      // Delete Opcion
+      
+      // deleteOpcion
       .addCase(deleteOpcion.pending, (state) => {
         state.loading = true
       })
       .addCase(deleteOpcion.fulfilled, (state, action) => {
         state.loading = false
         state.success = true
-        state.opciones = state.opciones.filter(
-          (opcion) => opcion._id !== action.payload
-        )
+        
+        // Eliminar del array de opciones si existe
+        if (Array.isArray(state.opciones)) {
+          state.opciones = state.opciones.filter(
+            (opcion) => opcion._id !== action.payload
+          )
+        }
       })
       .addCase(deleteOpcion.rejected, (state, action) => {
         state.loading = false
