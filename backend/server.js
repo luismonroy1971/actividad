@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const colors = require('colors');
 const cors = require('cors');
 const path = require('path');
+const fileUpload = require('express-fileupload');
 const connectDB = require('./config/db');
 const { errorHandler } = require('./middleware/errorMiddleware');
 
@@ -18,6 +19,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// File Upload
+app.use(fileUpload());
+
+// Crear directorio de uploads si no existe
+const fs = require('fs');
+const uploadDir = path.join(__dirname, '../uploads/actividades');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Configurar carpeta de uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

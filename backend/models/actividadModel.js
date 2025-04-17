@@ -26,6 +26,10 @@ const actividadSchema = mongoose.Schema({
     enum: ['Activa', 'Finalizada', 'Cancelada'],
     default: 'Activa'
   },
+  precio: {
+    type: Number,
+    default: 0
+  },
   imagen_promocional: {
     type: String,
     default: 'no-photo.jpg'

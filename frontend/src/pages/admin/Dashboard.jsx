@@ -145,20 +145,20 @@ const Dashboard = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {actividades.slice(0, 5).map((actividad) => (
-                  <tr key={actividad.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{actividad.nombre}</td>
+                  <tr key={actividad._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{actividad.titulo}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {actividad.fecha ? new Date(actividad.fecha).toLocaleDateString() : 'N/A'}
+                      {actividad.fecha_actividad ? new Date(actividad.fecha_actividad).toLocaleDateString() : 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{actividad.ubicacion || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{actividad.lugar || 'N/A'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       ${(actividad.precio || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Link to={`/admin/actividades/editar/${actividad.id}`} className="text-primary-600 hover:text-primary-900 mr-4">
+                      <Link to={`/admin/actividades/editar/${actividad._id}`} className="text-primary-600 hover:text-primary-900 mr-4">
                         Editar
                       </Link>
-                      <Link to={`/actividades/${actividad.id}`} className="text-gray-600 hover:text-gray-900">
+                      <Link to={`/actividades/${actividad._id}`} className="text-gray-600 hover:text-gray-900">
                         Ver
                       </Link>
                     </td>

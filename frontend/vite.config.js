@@ -11,7 +11,16 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      // Proxy para las imágenes - envía solicitudes de /uploads a tu servidor backend
+      '/uploads': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
     },
+    fs: {
+      // Permitir acceso a archivos fuera del directorio raíz
+      allow: ['..']
+    }
   },
   resolve: {
     alias: {

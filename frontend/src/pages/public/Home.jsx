@@ -29,6 +29,22 @@ const Home = () => {
     }
   }, [actividades, searchTerm])
 
+  // Función para formatear la URL de la imagen
+  const getImageUrl = (imageName) => {
+    if (!imageName || imageName === 'no-photo.jpg') {
+      return 'https://via.placeholder.com/300x200?text=No+imagen+disponible'
+    }
+    
+    // Si la imagen ya tiene una URL completa (comienza con http o https o data:)
+    if (imageName.startsWith('http') || imageName.startsWith('data:')) {
+      return imageName
+    }
+    
+    // De lo contrario, construir la URL completa
+    // Esta es la ruta desde la raíz del servidor hacia la carpeta de imágenes
+    return `/uploads/actividades/${imageName}`
+  }
+
   return (
     <div className="space-y-8">
       {/* Hero section */}
@@ -79,15 +95,18 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredActividades.map((actividad) => (
               <div key={actividad._id} className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow">
-                {actividad.imagen_promocional && (
-                  <div className="h-48 bg-gray-200 overflow-hidden">
-                    <img 
-                      src={actividad.imagen_promocional} 
-                      alt={actividad.titulo} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
+                <div className="h-48 bg-gray-200 overflow-hidden">
+                  <img 
+                    src={getImageUrl(actividad.imagen_promocional)} 
+                    alt={actividad.titulo} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error(`Error cargando imagen: ${e.target.src}`);
+                      e.target.onerror = null; 
+                      e.target.src = 'https://via.placeholder.com/300x200?text=Imagen+no+disponible'
+                    }}
+                  />
+                </div>
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-xl font-semibold text-gray-900">{actividad.titulo}</h3>

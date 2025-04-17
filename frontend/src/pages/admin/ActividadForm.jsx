@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getActividadById, createActividad, updateActividad, resetActividadSuccess } from '../../store/slices/actividadSlice'
+import { getActividadById, createActividad, updateActividad, resetActividadSuccess, uploadActividadImage } from '../../store/slices/actividadSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
 
@@ -17,12 +17,16 @@ const ActividadForm = () => {
     descripcion: '',
     fecha_actividad: '',
     lugar: '',
-    precio: '',
-    requisitos: '',
+    precio: 0,
     imagen_promocional: ''
   })
   
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
+  const fileInputRef = useRef(null)
   
   // Cargar datos de la actividad si estamos en modo edición
   useEffect(() => {
@@ -35,10 +39,11 @@ const ActividadForm = () => {
         descripcion: '',
         fecha_actividad: '',
         lugar: '',
-        precio: '',
-        requisitos: '',
+        precio: 0,
         imagen_promocional: ''
       })
+      setImagePreview('')
+      setImageFile(null)
     }
   }, [dispatch, id])
   
@@ -55,13 +60,16 @@ const ActividadForm = () => {
         descripcion: actividadData.descripcion || '',
         fecha_actividad: actividadData.fecha_actividad ? new Date(actividadData.fecha_actividad).toISOString().split('T')[0] : '',
         lugar: actividadData.lugar || '',
-        precio: actividadData.precio || 0,
-        requisitos: actividadData.requisitos || '',
+        precio: Number(actividadData.precio) || 0,  // Convertir explícitamente a número
         imagen_promocional: actividadData.imagen_promocional || ''
       })
+      
+      if (actividadData.imagen_promocional) {
+        setImagePreview(actividadData.imagen_promocional)
+      }
     }
   }, [id, actividad])
-  
+
   // Redireccionar después de guardar exitosamente
   useEffect(() => {
     if (submitted && success) {
@@ -83,13 +91,45 @@ const ActividadForm = () => {
   
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData({
-      ...formData,
-      [name]: name === 'precio' ? parseFloat(value) || '' : value
-    })
+    
+    // Para el campo de precio, asegúrate de que siempre sea un número
+    if (name === 'precio') {
+      // Si el valor está vacío, usa 0, de lo contrario conviértelo a número
+      const numberValue = value === '' ? 0 : Number(value)
+      setFormData({
+        ...formData,
+        [name]: numberValue
+      })
+    } else {
+      // Para otros campos, usa el valor normal
+      setFormData({
+        ...formData,
+        [name]: value
+      })
+    }
+  }
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    
+    if (!file.type.match('image.*')) {
+      setUploadError('Por favor selecciona una imagen válida')
+      return
+    }
+    
+    setImageFile(file)
+    setUploadError(null)
+    
+    // Mostrar vista previa de la imagen
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setImagePreview(reader.result)
+    }
+    reader.readAsDataURL(file)
   }
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
     // Validar campos requeridos
@@ -97,18 +137,61 @@ const ActividadForm = () => {
       return alert('Por favor completa todos los campos requeridos')
     }
     
+    // Preparar datos para enviar
     const actividadData = {
       ...formData,
-      precio: parseFloat(formData.precio) || 0
+      precio: Number(formData.precio) || 0  // Asegurarse de que sea un número
     }
     
-    if (id) {
-      dispatch(updateActividad({ id, actividadData }))
-    } else {
-      dispatch(createActividad(actividadData))
+    try {
+      if (id) {
+        // Si estamos editando una actividad existente
+        await dispatch(updateActividad({ id, actividadData })).unwrap()
+        
+        // Si hay una nueva imagen para subir, hacerlo después de actualizar los datos
+        if (imageFile) {
+          const formDataImg = new FormData()
+          formDataImg.append('file', imageFile)
+          setUploading(true)
+          
+          try {
+            await dispatch(uploadActividadImage({ id, formData: formDataImg })).unwrap()
+          } catch (error) {
+            setUploadError(error || 'Error al subir la imagen')
+          } finally {
+            setUploading(false)
+          }
+        }
+      } else {
+        // Si estamos creando una nueva actividad
+        // Para nuevas actividades, primero creamos sin imagen
+        const newActividad = await dispatch(createActividad({
+          ...actividadData,
+          imagen_promocional: 'no-photo.jpg' // Valor predeterminado
+        })).unwrap()
+        
+        // Luego, si hay una imagen para subir, la subimos para la actividad creada
+        if (imageFile && newActividad.data && newActividad.data._id) {
+          const newId = newActividad.data._id
+          const formDataImg = new FormData()
+          formDataImg.append('file', imageFile)
+          setUploading(true)
+          
+          try {
+            await dispatch(uploadActividadImage({ id: newId, formData: formDataImg })).unwrap()
+          } catch (error) {
+            setUploadError(error || 'Error al subir la imagen')
+          } finally {
+            setUploading(false)
+          }
+        }
+      }
+      
+      setSubmitted(true)
+    } catch (error) {
+      console.error('Error al guardar actividad:', error)
+      alert('Hubo un error al guardar la actividad')
     }
-    
-    setSubmitted(true)
   }
 
   return (
@@ -221,42 +304,47 @@ const ActividadForm = () => {
               ></textarea>
             </div>
             
-            {/* Requisitos */}
+            {/* Subida de imagen */}
             <div>
-              <label htmlFor="requisitos" className="block text-sm font-medium text-gray-700 mb-1">
-                Requisitos
+              <label htmlFor="imagen" className="block text-sm font-medium text-gray-700 mb-1">
+                Imagen promocional
               </label>
-              <textarea
-                id="requisitos"
-                name="requisitos"
-                value={formData.requisitos}
-                onChange={handleChange}
-                rows="3"
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              ></textarea>
-            </div>
-            
-            {/* URL de imagen */}
-            <div>
-              <label htmlFor="imagen_promocional" className="block text-sm font-medium text-gray-700 mb-1">
-                URL de imagen
-              </label>
-              <input
-                type="url"
-                id="imagen_promocional"
-                name="imagen_promocional"
-                value={formData.imagen_promocional}
-                onChange={handleChange}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                placeholder="https://ejemplo.com/imagen.jpg"
-              />
-              {formData.imagen_promocional && (
-                <div className="mt-2">
+              <div className="mt-1 flex items-center">
+                <input
+                  type="file"
+                  id="imagen"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current.click()}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 -ml-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+                  </svg>
+                  Subir imagen
+                </button>
+                {imageFile && (
+                  <span className="ml-3 text-sm text-gray-500">
+                    {imageFile.name}
+                  </span>
+                )}
+              </div>
+              
+              {uploading && <p className="mt-2 text-sm text-gray-500">Subiendo imagen...</p>}
+              {uploadError && <p className="mt-2 text-sm text-red-600">{uploadError}</p>}
+              
+              {imagePreview && (
+                <div className="mt-3">
                   <p className="text-sm text-gray-500 mb-1">Vista previa:</p>
                   <img 
-                    src={formData.imagen_promocional} 
+                    src={imagePreview} 
                     alt="Vista previa" 
-                    className="h-32 w-auto object-cover rounded-md border border-gray-300"
+                    className="h-40 w-auto object-cover rounded-md border border-gray-300"
                     onError={(e) => e.target.src = 'https://via.placeholder.com/300x200?text=Imagen+no+disponible'}
                   />
                 </div>
@@ -275,9 +363,9 @@ const ActividadForm = () => {
               <button
                 type="submit"
                 className="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                disabled={loading}
+                disabled={loading || uploading}
               >
-                {loading ? 'Guardando...' : id ? 'Actualizar' : 'Crear'}
+                {loading || uploading ? 'Guardando...' : id ? 'Actualizar' : 'Crear'}
               </button>
             </div>
           </form>

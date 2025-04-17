@@ -13,9 +13,12 @@ const ActividadDetalle = () => {
   const navigate = useNavigate()
   
   const { userInfo } = useSelector((state) => state.auth)
-  const { actividades, loading: actividadLoading, error: actividadError } = useSelector((state) => state.actividad)
-  const { opciones, loading: opcionesLoading, error: opcionesError } = useSelector((state) => state.opcion)
-  const { loading: pedidoLoading, success: pedidoSuccess, error: pedidoError } = useSelector((state) => state.pedido)
+  //const { actividades, loading: actividadLoading, error: actividadError } = useSelector((state) => state.actividades)
+  //const { opciones, loading: opcionesLoading, error: opcionesError } = useSelector((state) => state.opcion)
+  //const { loading: pedidoLoading, success: pedidoSuccess, error: pedidoError } = useSelector((state) => state.pedido)
+  const { actividades = [], loading: actividadLoading = false, error: actividadError = null } = useSelector((state) => state.actividades || {});
+  const { opciones = [], loading: opcionesLoading = false, error: opcionesError = null } = useSelector((state) => state.opcion || {});
+  const { loading: pedidoLoading = false, success: pedidoSuccess = false, error: pedidoError = null } = useSelector((state) => state.pedido || {});
   
   const [actividad, setActividad] = useState(null)
   const [opcionesActividad, setOpcionesActividad] = useState([])

@@ -38,18 +38,26 @@ const OpcionForm = () => {
   
   // Llenar el formulario con los datos de la opción cuando se carga
   useEffect(() => {
-    if (id && opcion && opcion.id === parseInt(id)) {
+    if (id && opcion) {
+      console.log('Opción cargada para edición:', opcion);
+      
+      // Obtener los datos de la opción, ya sea de opcion directamente o de opcion.data
+      const opcionData = opcion.data ? opcion.data : opcion;
+      
       setFormData({
-        nombre: opcion.nombre || '',
-        actividad_id: opcion.actividad_id || ''
+        nombre: opcionData.nombre || '',
+        actividad_id: opcionData.actividad_id || ''
       })
+      
+      // Debugging para verificar el ID de actividad cargado
+      console.log('ID de actividad cargado:', opcionData.actividad_id);
     }
   }, [id, opcion])
   
   // Redireccionar después de guardar exitosamente
   useEffect(() => {
     if (submitted && success) {
-      navigate('/admin/actividades')
+      navigate('/admin/opciones')
     }
   }, [success, submitted, navigate])
   
@@ -57,7 +65,7 @@ const OpcionForm = () => {
     const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]: name === 'actividad_id' ? parseInt(value) || '' : value
+      [name]: value
     })
   }
   
@@ -70,9 +78,10 @@ const OpcionForm = () => {
     }
     
     const opcionData = {
-      ...formData,
-      actividad_id: parseInt(formData.actividad_id)
+      ...formData
     }
+    
+    console.log('Enviando datos:', opcionData);
     
     if (id) {
       dispatch(updateOpcion({ id, opcionData }))
@@ -82,6 +91,26 @@ const OpcionForm = () => {
     
     setSubmitted(true)
   }
+  
+  // Obtener la lista de actividades para el dropdown
+  const getActividadesParaSelect = () => {
+    if (!actividades) return [];
+    
+    // Determinar si las actividades están en actividades o actividades.data
+    if (Array.isArray(actividades)) {
+      return actividades;
+    } else if (actividades.data && Array.isArray(actividades.data)) {
+      return actividades.data;
+    }
+    
+    return [];
+  }
+  
+  // Debugging de estado actual
+  useEffect(() => {
+    console.log('Estado actual del formulario:', formData);
+    console.log('Lista de actividades disponibles:', getActividadesParaSelect());
+  }, [formData, actividades]);
 
   return (
     <div className="space-y-6">
@@ -90,10 +119,10 @@ const OpcionForm = () => {
           {id ? 'Editar Opción' : 'Crear Nueva Opción'}
         </h2>
         <button
-          onClick={() => navigate('/admin/actividades')}
+          onClick={() => navigate('/admin/opciones')}
           className="text-primary-600 hover:text-primary-800 text-sm font-medium"
         >
-          ← Volver a actividades
+          ← Volver a opciones
         </button>
       </div>
       
@@ -135,8 +164,8 @@ const OpcionForm = () => {
                   required
                 >
                   <option value="">Seleccionar actividad</option>
-                  {actividades && actividades.map((actividad) => (
-                    <option key={actividad.id} value={actividad.id}>
+                  {getActividadesParaSelect().map((actividad) => (
+                    <option key={actividad._id} value={actividad._id}>
                       {actividad.titulo}
                     </option>
                   ))}
@@ -148,7 +177,7 @@ const OpcionForm = () => {
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
-                onClick={() => navigate('/admin/actividades')}
+                onClick={() => navigate('/admin/opciones')}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
                 Cancelar

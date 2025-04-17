@@ -21,8 +21,22 @@ const Opciones = () => {
     console.log('Solicitando opciones y actividades al API...')
   }, [dispatch, success])
   
+  // Procesar las actividades disponibles
+  const getActividadesArray = () => {
+    if (!actividades) return [];
+    
+    if (Array.isArray(actividades)) {
+      return actividades;
+    } else if (actividades.data && Array.isArray(actividades.data)) {
+      return actividades.data;
+    }
+    
+    return [];
+  }
+  
   useEffect(() => {
     console.log('Opciones recibidas:', opciones)
+    console.log('Actividades recibidas:', actividades)
     
     // Determinar el array de opciones basado en la estructura recibida
     let opcionesArray = []
@@ -51,15 +65,17 @@ const Opciones = () => {
     }
     
     if (filterActividad) {
-      filtered = filtered.filter(opcion => 
-        opcion.actividad_id === filterActividad || 
-        opcion.actividad_id?.toString() === filterActividad
-      )
+      filtered = filtered.filter(opcion => {
+        // Comparar como strings para mayor seguridad
+        const opcionActividadId = String(opcion.actividad_id || '');
+        const filterActividadId = String(filterActividad || '');
+        return opcionActividadId === filterActividadId;
+      })
     }
     
     console.log('Opciones filtradas:', filtered)
     setFilteredOpciones(filtered)
-  }, [opciones, searchTerm, filterActividad])
+  }, [opciones, searchTerm, filterActividad, actividades])
 
   // Función para obtener el nombre de la actividad por ID
   const getActividadNombre = (actividadId) => {
@@ -67,27 +83,31 @@ const Opciones = () => {
       return 'Sin actividad asignada'
     }
     
-    // Determinar el array de actividades
-    let actividadesArray = []
+    // Convertir a string para comparación segura
+    const actividadIdStr = String(actividadId);
     
-    if (actividades) {
-      if (Array.isArray(actividades)) {
-        actividadesArray = actividades
-      } else if (actividades.data && Array.isArray(actividades.data)) {
-        actividadesArray = actividades.data
-      }
-    }
+    // Obtener array de actividades
+    const actividadesArray = getActividadesArray();
     
-    if (!actividadesArray || actividadesArray.length === 0) {
+    if (actividadesArray.length === 0) {
+      console.log('No hay actividades disponibles para mostrar nombres');
       return 'Actividad no disponible'
     }
+
+    // Debugging - Mostrar los IDs disponibles para comparar
+    console.log('Buscando actividad con ID:', actividadIdStr);
+    console.log('IDs de actividades disponibles:', actividadesArray.map(a => String(a._id)));
     
-    const actividad = actividadesArray.find(act => 
-      act._id === actividadId || 
-      act._id?.toString() === actividadId?.toString()
-    )
+    // Buscar actividad comparando IDs como strings
+    const actividad = actividadesArray.find(act => String(act._id) === actividadIdStr);
     
-    return actividad ? actividad.titulo : 'Actividad no encontrada'
+    if (actividad) {
+      console.log('Actividad encontrada:', actividad.titulo);
+      return actividad.titulo;
+    } else {
+      console.log(`Actividad no encontrada para ID: ${actividadIdStr}`);
+      return 'Actividad no encontrada';
+    }
   }
 
   const handleDelete = (id) => {
@@ -97,22 +117,6 @@ const Opciones = () => {
     } else {
       setConfirmDelete(id)
     }
-  }
-
-  // Obtener lista única de actividades para el filtro
-  const getActividadesUnicas = () => {
-    if (!Array.isArray(opciones) || opciones.length === 0) {
-      return []
-    }
-    
-    // Extraer IDs únicos de actividades
-    const actividadesIds = [...new Set(
-      opciones
-        .filter(opcion => opcion?.actividad_id) // Asegurarnos de que actividad_id existe
-        .map(opcion => opcion.actividad_id?.toString()) // Convertir a string para comparación
-    )]
-    
-    return actividadesIds
   }
 
   return (
@@ -157,7 +161,7 @@ const Opciones = () => {
               onChange={(e) => setFilterActividad(e.target.value)}
             >
               <option value="">Todas las actividades</option>
-              {actividades && Array.isArray(actividades) && actividades.map(actividad => (
+              {getActividadesArray().map(actividad => (
                 <option key={actividad._id} value={actividad._id}>
                   {actividad.titulo}
                 </option>
@@ -202,25 +206,30 @@ const Opciones = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOpciones.map((opcion) => (
-                  <tr key={opcion._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{opcion.nombre}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {getActividadNombre(opcion.actividad_id)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Link to={`/admin/opciones/editar/${opcion._id}`} className="text-primary-600 hover:text-primary-900 mr-4">
-                        Editar
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(opcion._id)}
-                        className={`${confirmDelete === opcion._id ? 'text-red-600 font-medium' : 'text-gray-600 hover:text-red-900'}`}
-                      >
-                        {confirmDelete === opcion._id ? '¿Confirmar?' : 'Eliminar'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredOpciones.map((opcion) => {
+                  // Debugging - Mostrar IDs para detectar problemas
+                  console.log(`Opción: ${opcion.nombre}, Actividad ID: ${opcion.actividad_id}`);
+                  
+                  return (
+                    <tr key={opcion._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{opcion.nombre}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {getActividadNombre(opcion.actividad_id)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <Link to={`/admin/opciones/editar/${opcion._id}`} className="text-primary-600 hover:text-primary-900 mr-4">
+                          Editar
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(opcion._id)}
+                          className={`${confirmDelete === opcion._id ? 'text-red-600 font-medium' : 'text-gray-600 hover:text-red-900'}`}
+                        >
+                          {confirmDelete === opcion._id ? '¿Confirmar?' : 'Eliminar'}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
