@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { useParams, useNavigate } from 'react-router-dom'
-import { fetchActividades } from '../../store/slices/actividadSlice'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { getActividadById } from '../../store/slices/actividadSlice'
 import { getOpciones } from '../../store/slices/opcionSlice'
 import { createPedido } from '../../store/slices/pedidoSlice'
 import Loader from '../../components/Loader'
@@ -13,14 +13,11 @@ const ActividadDetalle = () => {
   const navigate = useNavigate()
   
   const { userInfo } = useSelector((state) => state.auth)
-  //const { actividades, loading: actividadLoading, error: actividadError } = useSelector((state) => state.actividades)
-  //const { opciones, loading: opcionesLoading, error: opcionesError } = useSelector((state) => state.opcion)
-  //const { loading: pedidoLoading, success: pedidoSuccess, error: pedidoError } = useSelector((state) => state.pedido)
-  const { actividades = [], loading: actividadLoading = false, error: actividadError = null } = useSelector((state) => state.actividades || {});
-  const { opciones = [], loading: opcionesLoading = false, error: opcionesError = null } = useSelector((state) => state.opcion || {});
-  const { loading: pedidoLoading = false, success: pedidoSuccess = false, error: pedidoError = null } = useSelector((state) => state.pedido || {});
+  const { actividad, loading: actividadLoading, error: actividadError } = useSelector((state) => state.actividades || {})
+  const { opciones = [], loading: opcionesLoading = false, error: opcionesError = null } = useSelector((state) => state.opcion || {})
+  const { loading: pedidoLoading = false, success: pedidoSuccess = false, error: pedidoError = null } = useSelector((state) => state.pedido || {})
   
-  const [actividad, setActividad] = useState(null)
+  const [actividadData, setActividadData] = useState(null)
   const [opcionesActividad, setOpcionesActividad] = useState([])
   const [seleccionadas, setSeleccionadas] = useState([])
   const [cantidades, setCantidades] = useState({})
@@ -28,38 +25,50 @@ const ActividadDetalle = () => {
   const [notas, setNotas] = useState('')
   const [metodoPago, setMetodoPago] = useState('efectivo')
   
+  // Cargar la actividad específica y opciones al montar
   useEffect(() => {
-    dispatch(fetchActividades())
-    dispatch(getOpciones())
-  }, [dispatch])
-  
-  useEffect(() => {
-    if (actividades && id) {
-      const actividadEncontrada = actividades.find(a => a.id === parseInt(id))
-      setActividad(actividadEncontrada)
+    if (id) {
+      dispatch(getActividadById(id))
+      dispatch(getOpciones())
     }
-  }, [actividades, id])
+  }, [dispatch, id])
   
+  // Actualizar actividadData cuando se carga actividad
   useEffect(() => {
-    if (opciones && actividad) {
-      // Filtrar opciones para esta actividad
-      const opcionesFiltradas = opciones.filter(opcion => opcion.actividad_id === actividad.id)
+    if (actividad) {
+      // Determinar si la actividad está en actividad.data o directamente en actividad
+      const data = actividad.data ? actividad.data : actividad
+      setActividadData(data)
+    }
+  }, [actividad])
+  
+  // Filtrar opciones para esta actividad
+  useEffect(() => {
+    if (opciones && opciones.length > 0 && actividadData) {
+      // Intentar filtrar por _id o id dependiendo de la estructura
+      const actividadId = actividadData._id || actividadData.id
+      
+      const opcionesFiltradas = opciones.filter(opcion => {
+        const opcionActividadId = opcion.actividad_id || opcion.actividad?._id
+        return opcionActividadId === actividadId
+      })
+      
       setOpcionesActividad(opcionesFiltradas)
       
       // Inicializar cantidades a 0
       const cantidadesIniciales = {}
       opcionesFiltradas.forEach(opcion => {
-        cantidadesIniciales[opcion.id] = 0
+        cantidadesIniciales[opcion._id || opcion.id] = 0
       })
       setCantidades(cantidadesIniciales)
     }
-  }, [opciones, actividad])
+  }, [opciones, actividadData])
   
+  // Calcular total
   useEffect(() => {
-    // Calcular total basado en opciones seleccionadas y cantidades
     let nuevoTotal = 0
     seleccionadas.forEach(opcionId => {
-      const opcion = opcionesActividad.find(o => o.id === opcionId)
+      const opcion = opcionesActividad.find(o => o._id === opcionId || o.id === opcionId)
       if (opcion) {
         nuevoTotal += opcion.precio * cantidades[opcionId]
       }
@@ -67,11 +76,23 @@ const ActividadDetalle = () => {
     setTotal(nuevoTotal)
   }, [seleccionadas, cantidades, opcionesActividad])
   
+  // Redireccionar después de éxito
   useEffect(() => {
     if (pedidoSuccess) {
       navigate('/cliente/pedidos')
     }
   }, [pedidoSuccess, navigate])
+  
+  // Función para formatear fechas
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Fecha no disponible';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      console.error('Error al formatear fecha:', error);
+      return 'Fecha no disponible';
+    }
+  };
   
   const handleCheckboxChange = (opcionId) => {
     if (seleccionadas.includes(opcionId)) {
@@ -126,7 +147,7 @@ const ActividadDetalle = () => {
     
     // Crear detalles del pedido
     const detalles = seleccionadas.map(opcionId => {
-      const opcion = opcionesActividad.find(o => o.id === opcionId)
+      const opcion = opcionesActividad.find(o => o._id === opcionId || o.id === opcionId)
       return {
         opcion_id: opcionId,
         cantidad: cantidades[opcionId],
@@ -136,8 +157,8 @@ const ActividadDetalle = () => {
     
     // Crear pedido
     const pedidoData = {
-      cliente_id: userInfo.id,
-      actividad_id: actividad.id,
+      cliente_id: userInfo._id || userInfo.id,
+      actividad_id: actividadData._id || actividadData.id,
       fecha_pedido: new Date().toISOString(),
       estado: 'pendiente',
       metodo_pago: metodoPago,
@@ -152,53 +173,74 @@ const ActividadDetalle = () => {
   if (actividadLoading || opcionesLoading) return <Loader />
   if (actividadError) return <Message variant="error">{actividadError}</Message>
   if (opcionesError) return <Message variant="error">{opcionesError}</Message>
-  if (!actividad) return <Message variant="error">No se encontró la actividad</Message>
+  if (!actividadData) return (
+    <div className="container mx-auto py-8">
+      <Message variant="error">
+        No se encontró la actividad
+        <div className="mt-4">
+          <Link to="/" className="text-primary-600 hover:text-primary-800">
+            Volver al inicio
+          </Link>
+        </div>
+      </Message>
+    </div>
+  )
 
   return (
     <div className="max-w-4xl mx-auto">
       {/* Información de la actividad */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-        {actividad.imagen && (
+        {actividadData.imagen_promocional && actividadData.imagen_promocional !== 'no-photo.jpg' ? (
           <div className="h-64 bg-gray-200 overflow-hidden">
             <img 
-              src={actividad.imagen} 
-              alt={actividad.nombre} 
+              src={`/uploads/actividades/${actividadData.imagen_promocional}`} 
+              alt={actividadData.titulo} 
               className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error('Error al cargar imagen:', e);
+                e.target.src = 'https://via.placeholder.com/800x400?text=Imagen+no+disponible';
+              }}
             />
+          </div>
+        ) : (
+          <div className="h-64 bg-gray-200 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
           </div>
         )}
         
         <div className="p-6">
           <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{actividad.nombre}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{actividadData.titulo || 'Sin título'}</h1>
               <p className="text-sm text-gray-500 mb-2">
                 <span className="mr-3">
                   <i className="far fa-calendar-alt mr-1"></i>
-                  {new Date(actividad.fecha).toLocaleDateString()}
+                  {formatDate(actividadData.fecha_actividad)}
                 </span>
-                {actividad.ubicacion && (
+                {actividadData.lugar && (
                   <span>
                     <i className="fas fa-map-marker-alt mr-1"></i>
-                    {actividad.ubicacion}
+                    {actividadData.lugar}
                   </span>
                 )}
               </p>
             </div>
             
             <div className="mt-2 md:mt-0 bg-primary-100 text-primary-800 text-lg font-semibold px-3 py-1 rounded-md">
-              ${actividad.precio.toFixed(2)}
+              ${(actividadData.precio || 0).toFixed(2)}
             </div>
           </div>
           
           <div className="prose max-w-none mb-6">
-            <p>{actividad.descripcion}</p>
+            <p>{actividadData.descripcion || 'Sin descripción'}</p>
           </div>
           
-          {actividad.requisitos && (
+          {actividadData.requisitos && (
             <div className="mb-6">
               <h3 className="text-lg font-medium text-gray-900 mb-2">Requisitos</h3>
-              <p className="text-gray-700">{actividad.requisitos}</p>
+              <p className="text-gray-700">{actividadData.requisitos}</p>
             </div>
           )}
         </div>
@@ -220,38 +262,41 @@ const ActividadDetalle = () => {
                 <p className="text-gray-500">No hay opciones disponibles para esta actividad.</p>
               ) : (
                 <div className="space-y-4">
-                  {opcionesActividad.map((opcion) => (
-                    <div key={opcion.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                      <div className="flex items-start">
-                        <input
-                          type="checkbox"
-                          id={`opcion-${opcion.id}`}
-                          checked={seleccionadas.includes(opcion.id)}
-                          onChange={() => handleCheckboxChange(opcion.id)}
-                          className="h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mt-1"
-                        />
-                        <label htmlFor={`opcion-${opcion.id}`} className="ml-3">
-                          <div className="text-base font-medium text-gray-900">{opcion.nombre}</div>
-                          <div className="text-sm text-gray-500">{opcion.descripcion}</div>
-                          <div className="text-sm font-medium text-primary-600">${opcion.precio.toFixed(2)}</div>
-                        </label>
-                      </div>
-                      
-                      <div className="flex items-center">
-                        <label htmlFor={`cantidad-${opcion.id}`} className="sr-only">Cantidad</label>
-                        <input
-                          type="number"
-                          id={`cantidad-${opcion.id}`}
-                          value={cantidades[opcion.id] || 0}
-                          onChange={(e) => handleCantidadChange(opcion.id, e.target.value)}
-                          min="0"
-                          className="w-16 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-center"
-                          disabled={!seleccionadas.includes(opcion.id)}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+  {opcionesActividad.map((opcion) => {
+    const opcionId = opcion._id || opcion.id;
+    return (
+      <div key={opcionId} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+        <div className="flex items-start">
+          <input
+            type="checkbox"
+            id={`opcion-${opcionId}`}
+            checked={seleccionadas.includes(opcionId)}
+            onChange={() => handleCheckboxChange(opcionId)}
+            className="h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mt-1"
+          />
+          <label htmlFor={`opcion-${opcionId}`} className="ml-3">
+            <div className="text-base font-medium text-gray-900">{opcion.nombre || opcion.titulo || 'Sin nombre'}</div>
+            <div className="text-sm text-gray-500">{opcion.descripcion || 'Sin descripción'}</div>
+            <div className="text-sm font-medium text-primary-600">${(opcion.precio || 0).toFixed(2)}</div>
+          </label>
+        </div>
+        
+        <div className="flex items-center">
+          <label htmlFor={`cantidad-${opcionId}`} className="sr-only">Cantidad</label>
+          <input
+            type="number"
+            id={`cantidad-${opcionId}`}
+            value={cantidades[opcionId] || 0}
+            onChange={(e) => handleCantidadChange(opcionId, e.target.value)}
+            min="0"
+            className="w-16 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-center"
+            disabled={!seleccionadas.includes(opcionId)}
+          />
+        </div>
+      </div>
+    );
+  })}
+</div>
               )}
             </div>
             

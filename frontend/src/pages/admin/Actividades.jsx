@@ -45,11 +45,19 @@ const Actividades = () => {
   const handleDelete = (id) => {
     if (confirmDelete === id) {
       dispatch(deleteActividad(id))
-      setConfirmDelete(null)
+        .unwrap()
+        .then(() => {
+          // Eliminación exitosa
+          setConfirmDelete(null);
+        })
+        .catch((error) => {
+          // Manejar el error
+          console.error('Error al eliminar actividad:', error);
+        });
     } else {
-      setConfirmDelete(id)
+      setConfirmDelete(id);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">

@@ -145,7 +145,7 @@ const eliminarActividad = asyncHandler(async (req, res) => {
   // Eliminar opciones asociadas
   await Opcion.deleteMany({ actividad_id: req.params.id });
 
-  await actividad.remove();
+  await Actividad.deleteOne({ _id: req.params.id });
 
   res.status(200).json({
     success: true,
@@ -164,7 +164,7 @@ const subirImagenActividad = asyncHandler(async (req, res) => {
     throw new Error(`Actividad no encontrada con id ${req.params.id}`);
   }
 
-  if (!req.files) {
+  if (!req.files || Object.keys(req.files).length === 0 || !req.files.file) {
     res.status(400);
     throw new Error('Por favor suba un archivo');
   }
@@ -177,38 +177,70 @@ const subirImagenActividad = asyncHandler(async (req, res) => {
     throw new Error('Por favor suba una imagen');
   }
 
-  // Verificar tamaño
-  if (file.size > process.env.MAX_FILE_SIZE) {
+  // Verificar tamaño (se configura en server.js con fileUpload middleware)
+  const MAX_SIZE = process.env.MAX_FILE_SIZE || 5 * 1024 * 1024; // 5MB por defecto
+  if (file.size > MAX_SIZE) {
     res.status(400);
-    throw new Error(`Por favor suba una imagen menor a ${process.env.MAX_FILE_SIZE / 1000000} MB`);
+    throw new Error(`Por favor suba una imagen menor a ${MAX_SIZE / 1000000} MB`);
   }
 
-  // Crear nombre de archivo personalizado
-  file.name = `actividad_${actividad._id}${path.parse(file.name).ext}`;
-
-  // Mover archivo
-  file.mv(`${process.env.FILE_UPLOAD_PATH}/actividades/${file.name}`, async err => {
-    if (err) {
-      console.error(err);
-      res.status(500);
-      throw new Error('Problema al subir el archivo');
+  try {
+    // Crear nombre de archivo personalizado con timestamp para evitar conflictos
+    const timestamp = Date.now();
+    const fileExt = path.parse(file.name).ext;
+    const fileName = `actividad_${actividad._id}_${timestamp}${fileExt}`;
+    
+    // Directorio destino
+    const uploadPath = path.join(__dirname, '../../uploads/actividades');
+    
+    // Asegurar que el directorio existe
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
     }
-
-    // Eliminar imagen anterior si existe
-    if (actividad.imagen_promocional !== 'no-photo.jpg') {
-      const imagePath = `${process.env.FILE_UPLOAD_PATH}/actividades/${actividad.imagen_promocional}`;
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
+    
+    // Ruta completa del archivo
+    const filePath = path.join(uploadPath, fileName);
+    
+    // Intentar eliminar imagen anterior si existe
+    if (actividad.imagen_promocional && actividad.imagen_promocional !== 'no-photo.jpg') {
+      const oldImagePath = path.join(uploadPath, actividad.imagen_promocional);
+      if (fs.existsSync(oldImagePath)) {
+        try {
+          fs.unlinkSync(oldImagePath);
+          console.log(`Imagen anterior eliminada: ${actividad.imagen_promocional}`);
+        } catch (unlinkErr) {
+          console.error(`No se pudo eliminar imagen anterior: ${unlinkErr.message}`);
+          // Continuar con el proceso aunque falle la eliminación
+        }
       }
     }
-
-    await Actividad.findByIdAndUpdate(req.params.id, { imagen_promocional: file.name });
-
+    
+    // Mover el archivo usando una promesa para mejor manejo de errores
+    await new Promise((resolve, reject) => {
+      file.mv(filePath, (err) => {
+        if (err) {
+          console.error('Error al mover el archivo:', err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+    
+    // Actualizar referencia en la base de datos
+    actividad.imagen_promocional = fileName;
+    await actividad.save();
+    
     res.status(200).json({
       success: true,
-      data: file.name
+      data: fileName
     });
-  });
+    
+  } catch (error) {
+    console.error('Error en subirImagenActividad:', error);
+    res.status(500);
+    throw new Error(`Error al subir la imagen: ${error.message}`);
+  }
 });
 
 // @desc    Obtener actividades con opciones

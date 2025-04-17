@@ -83,9 +83,6 @@ const Opciones = () => {
       return 'Sin actividad asignada'
     }
     
-    // Convertir a string para comparación segura
-    const actividadIdStr = String(actividadId);
-    
     // Obtener array de actividades
     const actividadesArray = getActividadesArray();
     
@@ -94,18 +91,26 @@ const Opciones = () => {
       return 'Actividad no disponible'
     }
 
-    // Debugging - Mostrar los IDs disponibles para comparar
-    console.log('Buscando actividad con ID:', actividadIdStr);
-    console.log('IDs de actividades disponibles:', actividadesArray.map(a => String(a._id)));
+    // Manejar diferentes formatos de ID de actividad
+    let actividadEncontrada = null;
     
-    // Buscar actividad comparando IDs como strings
-    const actividad = actividadesArray.find(act => String(act._id) === actividadIdStr);
+    // Caso 1: actividadId es un string o un ObjectId
+    if (typeof actividadId === 'string' || typeof actividadId === 'number') {
+      const actividadIdStr = String(actividadId);
+      actividadEncontrada = actividadesArray.find(act => String(act._id) === actividadIdStr);
+    }
+    // Caso 2: actividadId es un objeto con _id
+    else if (actividadId && typeof actividadId === 'object') {
+      if (actividadId._id) {
+        const actividadIdStr = String(actividadId._id);
+        actividadEncontrada = actividadesArray.find(act => String(act._id) === actividadIdStr);
+      }
+    }
     
-    if (actividad) {
-      console.log('Actividad encontrada:', actividad.titulo);
-      return actividad.titulo;
+    if (actividadEncontrada) {
+      return actividadEncontrada.titulo;
     } else {
-      console.log(`Actividad no encontrada para ID: ${actividadIdStr}`);
+      console.log(`Actividad no encontrada para ID: ${JSON.stringify(actividadId)}`);
       return 'Actividad no encontrada';
     }
   }

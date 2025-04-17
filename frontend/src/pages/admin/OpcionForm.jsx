@@ -16,7 +16,8 @@ const OpcionForm = () => {
   
   const [formData, setFormData] = useState({
     nombre: '',
-    actividad_id: ''
+    actividad_id: '',
+    precio: 0
   })
   
   const [submitted, setSubmitted] = useState(false)
@@ -31,7 +32,8 @@ const OpcionForm = () => {
       // Limpiar el estado si estamos creando una nueva opción
       setFormData({
         nombre: '',
-        actividad_id: ''
+        actividad_id: '',
+        precio: 0
       })
     }
   }, [dispatch, id])
@@ -44,13 +46,17 @@ const OpcionForm = () => {
       // Obtener los datos de la opción, ya sea de opcion directamente o de opcion.data
       const opcionData = opcion.data ? opcion.data : opcion;
       
+      // Asegurarse de que actividad_id sea un string para comparación correcta
+      const actividadId = opcionData.actividad_id ? String(opcionData.actividad_id) : '';
+      
       setFormData({
         nombre: opcionData.nombre || '',
-        actividad_id: opcionData.actividad_id || ''
+        actividad_id: actividadId,
+        precio: opcionData.precio || 0
       })
       
       // Debugging para verificar el ID de actividad cargado
-      console.log('ID de actividad cargado:', opcionData.actividad_id);
+      console.log('ID de actividad cargado:', actividadId);
     }
   }, [id, opcion])
   
@@ -170,6 +176,24 @@ const OpcionForm = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+              
+              {/* Precio */}
+              <div>
+                <label htmlFor="precio" className="block text-sm font-medium text-gray-700 mb-1">
+                  Precio <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  id="precio"
+                  name="precio"
+                  value={formData.precio}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  required
+                />
               </div>
             </div>
             

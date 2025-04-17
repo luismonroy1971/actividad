@@ -29,24 +29,40 @@ const Dashboard = () => {
     if (actividades && pedidos) {
       // Calcular estadísticas
       const fechaActual = new Date()
-      const actividadesProximas = actividades.filter(act => new Date(act.fecha) > fechaActual)
-      const pedidosPendientes = pedidos.filter(ped => ped.estado === 'pendiente')
+      const actividadesProximas = actividades.filter(act => 
+        act && act.fecha_actividad && new Date(act.fecha_actividad) > fechaActual
+      )
+      
+      const pedidosPendientes = pedidos.filter(ped => 
+        ped && ped.estado === 'pendiente'
+      )
       
       // Añadir comprobación para evitar error si algún pedido no tiene propiedad total
       const ingresoTotal = pedidos.reduce((total, pedido) => {
-        const pedidoTotal = pedido.total || 0
+        const pedidoTotal = pedido && pedido.total ? Number(pedido.total) : 0
         return total + pedidoTotal
       }, 0)
 
       setEstadisticas({
-        totalActividades: actividades.length,
+        totalActividades: Array.isArray(actividades) ? actividades.length : 0,
         actividadesProximas: actividadesProximas.length,
-        totalPedidos: pedidos.length,
+        totalPedidos: Array.isArray(pedidos) ? pedidos.length : 0,
         pedidosPendientes: pedidosPendientes.length,
         ingresoTotal
       })
     }
   }, [actividades, pedidos])
+
+  // Función de ayuda para formatear fechas de manera segura
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      console.error('Error al formatear fecha:', error);
+      return 'N/A';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -129,7 +145,7 @@ const Dashboard = () => {
           <div className="p-6"><Loader /></div>
         ) : actividadesError ? (
           <div className="p-6"><Message variant="error">{actividadesError}</Message></div>
-        ) : actividades.length === 0 ? (
+        ) : !actividades || actividades.length === 0 ? (
           <div className="p-6 text-center text-gray-500">No hay actividades disponibles</div>
         ) : (
           <div className="overflow-x-auto">
@@ -146,13 +162,17 @@ const Dashboard = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {actividades.slice(0, 5).map((actividad) => (
                   <tr key={actividad._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{actividad.titulo}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {actividad.fecha_actividad ? new Date(actividad.fecha_actividad).toLocaleDateString() : 'N/A'}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {actividad?.titulo || 'Sin título'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{actividad.lugar || 'N/A'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${(actividad.precio || 0).toFixed(2)}
+                      {formatDate(actividad?.fecha_actividad)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {actividad?.lugar || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ${actividad?.precio ? Number(actividad.precio).toFixed(2) : '0.00'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <Link to={`/admin/actividades/editar/${actividad._id}`} className="text-primary-600 hover:text-primary-900 mr-4">
@@ -186,7 +206,7 @@ const Dashboard = () => {
           <div className="p-6"><Loader /></div>
         ) : pedidosError ? (
           <div className="p-6"><Message variant="error">{pedidosError}</Message></div>
-        ) : pedidos.length === 0 ? (
+        ) : !pedidos || pedidos.length === 0 ? (
           <div className="p-6 text-center text-gray-500">No hay pedidos disponibles</div>
         ) : (
           <div className="overflow-x-auto">
@@ -204,28 +224,34 @@ const Dashboard = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {pedidos.slice(0, 5).map((pedido) => (
-                  <tr key={pedido.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{pedido.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{pedido.cliente?.nombre || 'N/A'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{pedido.actividad?.nombre || 'N/A'}</td>
+                  <tr key={pedido?._id || pedido?.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleDateString() : 'N/A'}
+                      #{pedido?._id || pedido?.id || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {pedido?.cliente?.nombre || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {pedido?.actividad?.titulo || pedido?.actividad?.nombre || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(pedido?.fecha_pedido)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        pedido.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-800' :
-                        pedido.estado === 'completado' ? 'bg-green-100 text-green-800' :
-                        pedido.estado === 'cancelado' ? 'bg-red-100 text-red-800' :
+                        pedido?.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                        pedido?.estado === 'completado' ? 'bg-green-100 text-green-800' :
+                        pedido?.estado === 'cancelado' ? 'bg-red-100 text-red-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {pedido.estado ? (pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1)) : 'N/A'}
+                        {pedido?.estado ? (pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1)) : 'N/A'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${(pedido.total || 0).toFixed(2)}
+                      ${pedido?.total ? Number(pedido.total).toFixed(2) : '0.00'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Link to={`/admin/pedidos/${pedido.id}`} className="text-primary-600 hover:text-primary-900">
+                      <Link to={`/admin/pedidos/${pedido?._id || pedido?.id}`} className="text-primary-600 hover:text-primary-900">
                         Ver detalles
                       </Link>
                     </td>

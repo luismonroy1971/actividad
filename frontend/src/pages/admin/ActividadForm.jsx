@@ -342,10 +342,19 @@ const ActividadForm = () => {
                 <div className="mt-3">
                   <p className="text-sm text-gray-500 mb-1">Vista previa:</p>
                   <img 
-                    src={imagePreview} 
+                    src={
+                      // Si es una URL de datos (Data URL), usarla directamente
+                      imagePreview.startsWith('data:') 
+                        ? imagePreview 
+                        // Si no, construir la ruta al archivo en el servidor
+                        : `/uploads/actividades/${imagePreview}`
+                    } 
                     alt="Vista previa" 
                     className="h-40 w-auto object-cover rounded-md border border-gray-300"
-                    onError={(e) => e.target.src = 'https://via.placeholder.com/300x200?text=Imagen+no+disponible'}
+                    onError={(e) => {
+                      console.log('Error al cargar la imagen:', e);
+                      e.target.src = 'https://via.placeholder.com/300x200?text=Imagen+no+disponible';
+                    }}
                   />
                 </div>
               )}

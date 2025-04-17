@@ -6,9 +6,15 @@ const path = require('path');
 const fileUpload = require('express-fileupload');
 const connectDB = require('./config/db');
 const { errorHandler } = require('./middleware/errorMiddleware');
+const { initializeUploadDirectories } = require('./utils/initUploads');
+const fs = require('fs');
 
 // Cargar variables de entorno
 dotenv.config();
+
+// Inicializar directorios de uploads
+const baseDir = path.join(__dirname, '..');
+initializeUploadDirectories(baseDir);
 
 // Conectar a la base de datos
 connectDB();
@@ -20,18 +26,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// File Upload
-app.use(fileUpload());
-
-// Crear directorio de uploads si no existe
-const fs = require('fs');
-const uploadDir = path.join(__dirname, '../uploads/actividades');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// File Upload - configuración mejorada
+app.use(fileUpload({
+  createParentPath: true,  // Crea automáticamente directorios padre si no existen
+  limits: { 
+    fileSize: process.env.MAX_FILE_SIZE || 5 * 1024 * 1024 // 5MB por defecto o lo que se configure
+  },
+  abortOnLimit: true,      // Aborta la subida si se excede el límite
+  useTempFiles: true,      // Usa archivos temporales para mejorar el rendimiento
+  tempFileDir: path.join(baseDir, '/uploads/temp/'), // Directorio temporal
+  debug: process.env.NODE_ENV === 'development' // Modo debug en desarrollo
+}));
 
 // Configurar carpeta de uploads
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(baseDir, '/uploads')));
 
 // Rutas
 app.use('/api/usuarios', require('./routes/usuarioRoutes'));
