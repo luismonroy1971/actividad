@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getClienteById, createCliente, updateCliente } from '../../store/slices/clienteSlice'
+import { getGrupos } from '../../store/slices/grupoSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
 
@@ -11,6 +12,7 @@ const ClienteForm = () => {
   const dispatch = useDispatch()
   
   const { cliente, loading, error, success } = useSelector((state) => state.clientes)
+  const { grupos, loading: gruposLoading } = useSelector((state) => state.grupos)
   
   const [formData, setFormData] = useState({
     nombre_completo: '',
@@ -18,13 +20,16 @@ const ClienteForm = () => {
     documento_identidad: '',
     telefono: '',
     pregunta_validacion: '',
-    respuesta_validacion: ''
+    respuesta_validacion: '',
+    grupo_id: ''
   })
   
   const [submitted, setSubmitted] = useState(false)
   
   // Cargar datos del cliente si estamos en modo edición
   useEffect(() => {
+    dispatch(getGrupos())
+    
     if (id) {
       dispatch(getClienteById(id))
     } else {
@@ -35,7 +40,8 @@ const ClienteForm = () => {
         documento_identidad: '',
         telefono: '',
         pregunta_validacion: '',
-        respuesta_validacion: ''
+        respuesta_validacion: '',
+        grupo_id: ''
       })
     }
   }, [dispatch, id])
@@ -43,13 +49,28 @@ const ClienteForm = () => {
   // Llenar el formulario con los datos del cliente cuando se carga
   useEffect(() => {
     if (id && cliente && cliente._id === id) {
+      // Extraer el ID de grupo correctamente
+      let grupoId = '';
+      
+      if (cliente.grupo_id) {
+        // Si es un objeto con _id (referencia poblada desde MongoDB)
+        if (typeof cliente.grupo_id === 'object' && cliente.grupo_id._id) {
+          grupoId = String(cliente.grupo_id._id);
+        }
+        // Si es un string directo o un ObjectId
+        else {
+          grupoId = String(cliente.grupo_id);
+        }
+      }
+      
       setFormData({
         nombre_completo: cliente.nombre_completo || '',
         correo: cliente.correo || '',
         documento_identidad: cliente.documento_identidad || '',
         telefono: cliente.telefono || '',
         pregunta_validacion: cliente.pregunta_validacion || '',
-        respuesta_validacion: cliente.respuesta_validacion || ''
+        respuesta_validacion: cliente.respuesta_validacion || '',
+        grupo_id: grupoId
       })
     }
   }, [id, cliente])
@@ -189,6 +210,30 @@ const ClienteForm = () => {
                   required
                 />
               </div>
+            </div>
+            
+            {/* Grupo */}
+            <div>
+              <label htmlFor="grupo_id" className="block text-sm font-medium text-gray-700 mb-1">
+                Grupo
+              </label>
+              <select
+                id="grupo_id"
+                name="grupo_id"
+                value={formData.grupo_id}
+                onChange={handleChange}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              >
+                <option value="">Sin grupo asignado</option>
+                {grupos && grupos.map((grupo) => (
+                  <option 
+                    key={grupo._id} 
+                    value={grupo._id}
+                  >
+                    {grupo.nombre}
+                  </option>
+                ))}
+              </select>
             </div>
             
             {/* Pregunta de Validación */}

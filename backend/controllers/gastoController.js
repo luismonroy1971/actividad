@@ -141,7 +141,7 @@ const eliminarGasto = asyncHandler(async (req, res) => {
     throw new Error('No tiene permiso para eliminar este gasto');
   }
 
-  await gasto.remove();
+  await Gasto.deleteOne({ _id: req.params.id });
 
   res.json({
     success: true,

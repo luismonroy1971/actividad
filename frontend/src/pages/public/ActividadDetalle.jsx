@@ -6,6 +6,7 @@ import { getOpciones } from '../../store/slices/opcionSlice'
 import { createPedido } from '../../store/slices/pedidoSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
+import formatDate from '../../utils/dateFormatter';
 
 const ActividadDetalle = () => {
   const { id } = useParams()
@@ -48,11 +49,38 @@ const ActividadDetalle = () => {
       // Intentar filtrar por _id o id dependiendo de la estructura
       const actividadId = actividadData._id || actividadData.id
       
-      const opcionesFiltradas = opciones.filter(opcion => {
-        const opcionActividadId = opcion.actividad_id || opcion.actividad?._id
-        return opcionActividadId === actividadId
+      console.log('Actividad ID:', actividadId)
+      console.log('Opciones disponibles:', opciones)
+      
+      // Extraer las opciones del objeto 'data' si existe
+      const opcionesData = Array.isArray(opciones.data) ? opciones.data : opciones
+      
+      const opcionesFiltradas = opcionesData.filter(opcion => {
+        // Extraer el ID de actividad de la opción, considerando diferentes estructuras posibles
+        let opcionActividadId = null
+        
+        // Caso 1: actividad_id es un string directo
+        if (opcion.actividad_id && typeof opcion.actividad_id === 'string') {
+          opcionActividadId = opcion.actividad_id
+        }
+        // Caso 2: actividad_id es un objeto con _id
+        else if (opcion.actividad_id && typeof opcion.actividad_id === 'object' && opcion.actividad_id._id) {
+          opcionActividadId = opcion.actividad_id._id
+        }
+        // Caso 3: actividad es un objeto con _id
+        else if (opcion.actividad && opcion.actividad._id) {
+          opcionActividadId = opcion.actividad._id
+        }
+        // Caso 4: actividad es un objeto con id
+        else if (opcion.actividad && opcion.actividad.id) {
+          opcionActividadId = opcion.actividad.id
+        }
+        
+        // Comparar IDs como strings para evitar problemas de tipo
+        return String(opcionActividadId) === String(actividadId)
       })
       
+      console.log('Opciones filtradas:', opcionesFiltradas)
       setOpcionesActividad(opcionesFiltradas)
       
       // Inicializar cantidades a 0
@@ -82,18 +110,7 @@ const ActividadDetalle = () => {
       navigate('/cliente/pedidos')
     }
   }, [pedidoSuccess, navigate])
-  
-  // Función para formatear fechas
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Fecha no disponible';
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch (error) {
-      console.error('Error al formatear fecha:', error);
-      return 'Fecha no disponible';
-    }
-  };
-  
+    
   const handleCheckboxChange = (opcionId) => {
     if (seleccionadas.includes(opcionId)) {
       // Deseleccionar opción

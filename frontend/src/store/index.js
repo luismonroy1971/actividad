@@ -4,6 +4,7 @@ import actividadReducer from './slices/actividadSlice'
 import clienteReducer from './slices/clienteSlice'
 import pedidoReducer from './slices/pedidoSlice'
 import opcionReducer from './slices/opcionSlice'
+import grupoReducer from './slices/grupoSlice'
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     clientes: clienteReducer,
     pedidos: pedidoReducer,
     opciones: opcionReducer,
+    grupos: grupoReducer,
   },
   devTools: process.env.NODE_ENV !== 'production',
 })

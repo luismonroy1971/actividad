@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { fetchActividades, deleteActividad } from '../../store/slices/actividadSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
+import formatDate from '../../utils/dateFormatter';
 
 const Actividades = () => {
   const dispatch = useDispatch()
@@ -129,7 +130,7 @@ const Actividades = () => {
                   <tr key={actividad._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{actividad.titulo}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(actividad.fecha_actividad).toLocaleDateString()}
+                      {formatDate(actividad.fecha_actividad)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{actividad.lugar}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{actividad.estado}</td>

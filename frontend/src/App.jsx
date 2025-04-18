@@ -30,6 +30,9 @@ import AdminOpciones from './pages/admin/Opciones'
 import AdminOpcionForm from './pages/admin/OpcionForm'
 import AdminUsuarios from './pages/admin/Usuarios'
 import AdminUsuarioForm from './pages/admin/UsuarioForm'
+import Grupos from './pages/admin/Grupos'
+import GrupoForm from './pages/admin/GrupoForm'
+import GastosActividad from './pages/admin/GastosActividad'
 
 // Componentes
 import NotFound from './components/NotFound'
@@ -86,6 +89,10 @@ function App() {
         <Route path="usuarios" element={<AdminUsuarios />} />
         <Route path="usuarios/crear" element={<AdminUsuarioForm />} />
         <Route path="usuarios/editar/:id" element={<AdminUsuarioForm />} />
+        <Route path="grupos" element={<Grupos />} />
+        <Route path="grupos/crear" element={<GrupoForm />} />
+        <Route path="grupos/editar/:id" element={<GrupoForm />} />
+        <Route path="actividades/:id/gastos" element={<GastosActividad />} />
       </Route>
       
       {/* Ruta 404 */}

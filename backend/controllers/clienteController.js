@@ -215,7 +215,7 @@ const eliminarCliente = asyncHandler(async (req, res) => {
   // Eliminar usuario asociado al cliente
   await Usuario.deleteMany({ cliente_id: req.params.id });
 
-  await cliente.remove();
+  await Cliente.deleteOne({ _id: req.params.id });
 
   res.status(200).json({
     success: true,

@@ -1,0 +1,93 @@
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { useSelector } from 'react-redux'
+
+// Layouts
+import AdminLayout from './layouts/AdminLayout'
+import PublicLayout from './layouts/PublicLayout'
+import ClienteLayout from './layouts/ClienteLayout'
+
+// Páginas públicas
+import Home from './pages/public/Home'
+import Login from './pages/public/Login'
+import Registro from './pages/public/Registro'
+import ActividadDetalle from './pages/public/ActividadDetalle'
+
+// Páginas de administrador
+import Dashboard from './pages/admin/Dashboard'
+import Actividades from './pages/admin/Actividades'
+import ActividadForm from './pages/admin/ActividadForm'
+import Clientes from './pages/admin/Clientes'
+import ClienteForm from './pages/admin/ClienteForm'
+import Usuarios from './pages/admin/Usuarios'
+import UsuarioForm from './pages/admin/UsuarioForm'
+import Opciones from './pages/admin/Opciones'
+import OpcionForm from './pages/admin/OpcionForm'
+import Pedidos from './pages/admin/Pedidos'
+import PedidoDetalle from './pages/admin/PedidoDetalle'
+import GastosActividad from './pages/admin/GastosActividad'
+import Grupos from './pages/admin/Grupos'
+import GrupoForm from './pages/admin/GrupoForm'
+
+// Páginas de cliente
+import ClienteDashboard from './pages/cliente/Dashboard'
+import ClientePedidos from './pages/cliente/Pedidos'
+import ClientePedidoDetalle from './pages/cliente/PedidoDetalle'
+import ClientePerfil from './pages/cliente/Perfil'
+
+// Componentes
+import NotFound from './components/NotFound'
+
+function App() {
+  const { userInfo } = useSelector((state) => state.auth)
+
+  return (
+    <Router>
+      <Routes>
+        {/* Rutas públicas */}
+        <Route path="/" element={<PublicLayout />}>
+          <Route index element={<Home />} />
+          <Route path="login" element={<Login />} />
+          <Route path="registro" element={<Registro />} />
+          <Route path="actividades/:id" element={<ActividadDetalle />} />
+        </Route>
+
+        {/* Rutas de administrador */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="actividades" element={<Actividades />} />
+          <Route path="actividades/crear" element={<ActividadForm />} />
+          <Route path="actividades/editar/:id" element={<ActividadForm />} />
+          <Route path="actividades/:id/gastos" element={<GastosActividad />} />
+          <Route path="clientes" element={<Clientes />} />
+          <Route path="clientes/crear" element={<ClienteForm />} />
+          <Route path="clientes/editar/:id" element={<ClienteForm />} />
+          <Route path="usuarios" element={<Usuarios />} />
+          <Route path="usuarios/crear" element={<UsuarioForm />} />
+          <Route path="usuarios/editar/:id" element={<UsuarioForm />} />
+          <Route path="opciones" element={<Opciones />} />
+          <Route path="opciones/crear" element={<OpcionForm />} />
+          <Route path="opciones/editar/:id" element={<OpcionForm />} />
+          <Route path="pedidos" element={<Pedidos />} />
+          <Route path="pedidos/:id" element={<PedidoDetalle />} />
+          <Route path="grupos" element={<Grupos />} />
+          <Route path="grupos/crear" element={<GrupoForm />} />
+          <Route path="grupos/editar/:id" element={<GrupoForm />} />
+        </Route>
+
+        {/* Rutas de cliente */}
+        <Route path="/cliente" element={<ClienteLayout />}>
+          <Route index element={<ClienteDashboard />} />
+          <Route path="pedidos" element={<ClientePedidos />} />
+          <Route path="pedidos/:id" element={<ClientePedidoDetalle />} />
+          <Route path="perfil" element={<ClientePerfil />} />
+        </Route>
+
+        {/* Ruta 404 */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
+  )
+}
+
+export default App

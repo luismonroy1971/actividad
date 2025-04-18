@@ -111,7 +111,7 @@ const eliminarOpcion = asyncHandler(async (req, res) => {
     throw new Error(`Opción no encontrada con id ${req.params.id}`);
   }
 
-  await opcion.remove();
+  await Opcion.deleteOne({ _id: req.params.id });
 
   res.status(200).json({
     success: true,

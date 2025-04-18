@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logout } from '../store/slices/authSlice'
-import { XMarkIcon, Bars3Icon, HomeIcon, UserGroupIcon, CalendarIcon, TicketIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, Bars3Icon, HomeIcon, UserGroupIcon, CalendarIcon, TicketIcon, CurrencyDollarIcon, UsersIcon } from '@heroicons/react/24/outline'
 
 const AdminLayout = () => {
   const { userInfo } = useSelector((state) => state.auth)
@@ -20,6 +20,7 @@ const AdminLayout = () => {
     { name: 'Dashboard', href: '/admin', icon: HomeIcon, current: location.pathname === '/admin' },
     { name: 'Actividades', href: '/admin/actividades', icon: CalendarIcon, current: location.pathname.includes('/admin/actividades') },
     { name: 'Opciones', href: '/admin/opciones', icon: TicketIcon, current: location.pathname.includes('/admin/opciones') },
+    { name: 'Grupos', href: '/admin/grupos', icon: UsersIcon, current: location.pathname.includes('/admin/grupos') },
     { name: 'Clientes', href: '/admin/clientes', icon: UserGroupIcon, current: location.pathname.includes('/admin/clientes') },
     { name: 'Usuarios', href: '/admin/usuarios', icon: UserGroupIcon, current: location.pathname.includes('/admin/usuarios') },
     { name: 'Pedidos', href: '/admin/pedidos', icon: CurrencyDollarIcon, current: location.pathname.includes('/admin/pedidos') },

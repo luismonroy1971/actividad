@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { fetchActividades } from '../../store/slices/actividadSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
+import formatDate from '../../utils/dateFormatter';
 
 const Home = () => {
   const dispatch = useDispatch()
@@ -115,7 +116,7 @@ const Home = () => {
                     </span>
                   </div>
                   <p className="text-sm text-gray-500 mb-2">
-                    {new Date(actividad.fecha_actividad).toLocaleDateString()} | {actividad.lugar}
+                    {formatDate(actividad.fecha_actividad)} | {actividad.lugar}
                   </p>
                   <p className="text-gray-700 mb-4 line-clamp-3">{actividad.descripcion}</p>
                   <Link 

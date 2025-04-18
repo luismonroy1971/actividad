@@ -47,6 +47,8 @@ app.use('/api/actividades', require('./routes/actividadRoutes'));
 app.use('/api/opciones', require('./routes/opcionRoutes'));
 app.use('/api/clientes', require('./routes/clienteRoutes'));
 app.use('/api/pedidos', require('./routes/pedidoRoutes'));
+app.use('/api/gastos', require('./routes/gastoRoutes'));
+app.use('/api/grupos', require('./routes/grupoRoutes'));
 
 // Middleware de manejo de errores
 app.use(errorHandler);

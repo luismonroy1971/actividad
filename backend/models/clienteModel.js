@@ -34,6 +34,11 @@ const clienteSchema = mongoose.Schema({
   respuesta_validacion: {
     type: String,
     required: [true, 'Por favor ingrese la respuesta a la pregunta de validación']
+  },
+  grupo_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Grupo',
+    default: null
   }
 }, {
   timestamps: {

@@ -18,7 +18,14 @@ const Pedidos = () => {
   
   useEffect(() => {
     // Filtrar pedidos del cliente actual
-    const clientePedidos = pedidos?.filter(pedido => pedido.cliente_id === userInfo?.id) || []
+    const clientePedidos = pedidos?.filter(pedido => {
+      // Comparar como strings para mayor seguridad
+      const pedidoClienteId = pedido.cliente_id?._id || pedido.cliente_id;
+      const userClienteId = userInfo?.cliente_id || userInfo?.id;
+      
+      return pedidoClienteId && userClienteId && 
+             String(pedidoClienteId) === String(userClienteId);
+    }) || []
     
     // Aplicar filtro por estado
     if (filtroEstado === 'todos') {

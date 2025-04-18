@@ -1,83 +1,76 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getOpcionById, createOpcion, updateOpcion } from '../../store/slices/opcionSlice'
+import { getGrupoById, createGrupo, updateGrupo } from '../../store/slices/grupoSlice'
 import { fetchActividades } from '../../store/slices/actividadSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
 
-const OpcionForm = () => {
+const GrupoForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const dispatch = useDispatch()
   
-  const { opcion, loading, error, success } = useSelector((state) => state.opciones)
+  const { grupo, loading, error, success } = useSelector((state) => state.grupos)
   const { actividades, loading: actividadesLoading } = useSelector((state) => state.actividades)
   
   const [formData, setFormData] = useState({
     nombre: '',
-    actividad_id: '',
-    precio: 0
+    descripcion: '',
+    actividad_id: ''
   })
   
   const [submitted, setSubmitted] = useState(false)
   
-  // Cargar datos de la opción si estamos en modo edición
+  // Cargar datos del grupo si estamos en modo edición
   useEffect(() => {
     dispatch(fetchActividades())
     
     if (id) {
-      dispatch(getOpcionById(id))
+      dispatch(getGrupoById(id))
     } else {
-      // Limpiar el estado si estamos creando una nueva opción
+      // Limpiar el estado si estamos creando un nuevo grupo
       setFormData({
         nombre: '',
-        actividad_id: '',
-        precio: 0
+        descripcion: '',
+        actividad_id: ''
       })
     }
   }, [dispatch, id])
   
-  // Llenar el formulario con los datos de la opción cuando se carga
+  // Llenar el formulario con los datos del grupo cuando se carga
   useEffect(() => {
-    if (id && opcion) {
-      console.log('Opción cargada para edición:', opcion);
-      
-      // Obtener los datos de la opción, ya sea de opcion directamente o de opcion.data
-      const opcionData = opcion.data ? opcion.data : opcion;
+    if (id && grupo) {
+      // Obtener los datos del grupo, ya sea de grupo directamente o de grupo.data
+      const grupoData = grupo.data ? grupo.data : grupo;
       
       // Extraer el ID de actividad correctamente
       let actividadId = '';
       
-      if (opcionData.actividad_id) {
+      if (grupoData.actividad_id) {
         // Si es un objeto con _id (referencia poblada desde MongoDB)
-        if (typeof opcionData.actividad_id === 'object' && opcionData.actividad_id._id) {
-          actividadId = String(opcionData.actividad_id._id);
+        if (typeof grupoData.actividad_id === 'object' && grupoData.actividad_id._id) {
+          actividadId = String(grupoData.actividad_id._id);
         }
         // Si es un string directo o un ObjectId
         else {
-          actividadId = String(opcionData.actividad_id);
+          actividadId = String(grupoData.actividad_id);
         }
       }
       
-      console.log('ID de actividad extraído:', actividadId);
-      console.log('Actividades disponibles:', getActividadesParaSelect());
-      
-      // Actualizar el formulario con los datos de la opción
+      // Actualizar el formulario con los datos del grupo
       setFormData({
-        nombre: opcionData.nombre || '',
-        actividad_id: actividadId,
-        precio: opcionData.precio || 0
+        nombre: grupoData.nombre || '',
+        descripcion: grupoData.descripcion || '',
+        actividad_id: actividadId
       });
-      
-      console.log('ID de actividad establecido en el formulario:', actividadId);
     }
-  }, [id, opcion, actividades])
+  }, [id, grupo, actividades])
   
   // Redireccionar después de guardar exitosamente
   useEffect(() => {
     if (submitted && success) {
-      navigate('/admin/opciones')
+      navigate('/admin/grupos')
     }
   }, [success, submitted, navigate])
   
@@ -97,16 +90,14 @@ const OpcionForm = () => {
       return alert('Por favor completa todos los campos requeridos')
     }
     
-    const opcionData = {
+    const grupoData = {
       ...formData
     }
     
-    console.log('Enviando datos:', opcionData);
-    
     if (id) {
-      dispatch(updateOpcion({ id, opcionData }))
+      dispatch(updateGrupo({ id, grupoData }))
     } else {
-      dispatch(createOpcion(opcionData))
+      dispatch(createGrupo(grupoData))
     }
     
     setSubmitted(true)
@@ -125,24 +116,18 @@ const OpcionForm = () => {
     
     return [];
   }
-  
-  // Debugging de estado actual
-  useEffect(() => {
-    console.log('Estado actual del formulario:', formData);
-    console.log('Lista de actividades disponibles:', getActividadesParaSelect());
-  }, [formData, actividades]);
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-800">
-          {id ? 'Editar Opción' : 'Crear Nueva Opción'}
+          {id ? 'Editar Grupo' : 'Crear Nuevo Grupo'}
         </h2>
         <button
-          onClick={() => navigate('/admin/opciones')}
+          onClick={() => navigate('/admin/grupos')}
           className="text-primary-600 hover:text-primary-800 text-sm font-medium"
         >
-          ← Volver a opciones
+          ← Volver a grupos
         </button>
       </div>
       
@@ -195,40 +180,35 @@ const OpcionForm = () => {
                 </select>
               </div>
               
-              {/* Precio */}
+              {/* Descripción */}
               <div>
-                <label htmlFor="precio" className="block text-sm font-medium text-gray-700 mb-1">
-                  Precio <span className="text-red-500">*</span>
+                <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">
+                  Descripción
                 </label>
-                <input
-                  type="number"
-                  id="precio"
-                  name="precio"
-                  value={formData.precio}
+                <textarea
+                  id="descripcion"
+                  name="descripcion"
+                  value={formData.descripcion}
                   onChange={handleChange}
-                  min="0"
-                  step="0.01"
+                  rows="4"
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                  required
-                />
+                ></textarea>
               </div>
             </div>
             
-            {/* Botones */}
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end pt-4">
               <button
                 type="button"
-                onClick={() => navigate('/admin/opciones')}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                onClick={() => navigate('/admin/grupos')}
+                className="mr-4 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                disabled={loading}
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
-                {loading ? 'Guardando...' : id ? 'Actualizar' : 'Crear'}
+                {id ? 'Actualizar' : 'Crear'}
               </button>
             </div>
           </form>
@@ -238,4 +218,4 @@ const OpcionForm = () => {
   )
 }
 
-export default OpcionForm
+export default GrupoForm

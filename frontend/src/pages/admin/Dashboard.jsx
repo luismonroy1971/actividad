@@ -56,14 +56,33 @@ const Dashboard = () => {
   // Función de ayuda para formatear fechas de manera segura
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
+    
     try {
-      return new Date(dateString).toLocaleDateString();
+      // Extraer directamente del string ISO para evitar problemas de zona horaria
+      if (dateString.includes('T')) {
+        const datePart = dateString.split('T')[0];
+        const [year, month, day] = datePart.split('-');
+        return `${day}/${month}/${year}`;
+      }
+      
+      // Si es un formato simple como '2025-05-01'
+      if (dateString.includes('-') && dateString.split('-').length === 3) {
+        const [year, month, day] = dateString.split('-');
+        return `${day}/${month}/${year}`;
+      }
+      
+      // Último recurso: crear fecha y formatear manualmente
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Fecha inválida';
+      }
+      
+      return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
     } catch (error) {
       console.error('Error al formatear fecha:', error);
       return 'N/A';
     }
   };
-
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-800">Panel de Administración</h2>
