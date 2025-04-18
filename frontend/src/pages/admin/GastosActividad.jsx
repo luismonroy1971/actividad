@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { useParams, Link } from 'react-router-dom'
-import axios from 'axios'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
+import { getActividadById } from '../../store/slices/actividadSlice'
+import { getGastosPorActividad, getResumenFinanciero, createGasto, updateGasto, deleteGasto, resetGastoState } from '../../store/slices/gastoSlice'
 
 const GastosActividad = () => {
+  const dispatch = useDispatch()
   const { actividadId } = useParams()
   const { userInfo } = useSelector((state) => state.auth)
-  
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [actividad, setActividad] = useState(null)
-  const [gastos, setGastos] = useState([])
-  const [resumenFinanciero, setResumenFinanciero] = useState(null)
+  const { actividad } = useSelector((state) => state.actividades)
+  const { gastos, resumenFinanciero, loading, error, success } = useSelector((state) => state.gastos)
+  const [editMode, setEditMode] = useState(false)
+  const [selectedGasto, setSelectedGasto] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(null)
+
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     concepto: '',
@@ -24,62 +26,30 @@ const GastosActividad = () => {
   })
 
   useEffect(() => {
-    fetchActividad()
-    fetchGastos()
-    fetchResumenFinanciero()
-  }, [actividadId])
-
-  const fetchActividad = async () => {
-    try {
-      setLoading(true)
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-      }
-      
-      const { data } = await axios.get(`/api/actividades/${actividadId}`, config)
-      setActividad(data)
-      setLoading(false)
-    } catch (error) {
-      setError(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      )
-      setLoading(false)
+    dispatch(getActividadById(actividadId))
+    dispatch(getGastosPorActividad(actividadId))
+    dispatch(getResumenFinanciero(actividadId))
+    
+    // Limpiar el estado cuando el componente se desmonte
+    return () => {
+      dispatch(resetGastoState())
     }
-  }
+  }, [dispatch, actividadId])
 
-  const fetchGastos = async () => {
-    try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-      }
-      
-      const { data } = await axios.get(`/api/gastos/actividad/${actividadId}`, config)
-      setGastos(data.data || [])
-    } catch (error) {
-      console.error('Error al cargar gastos:', error)
+  // Efecto para limpiar el formulario y actualizar datos cuando se crea un gasto exitosamente
+  useEffect(() => {
+    if (success) {
+      setFormData({
+        concepto: '',
+        monto: '',
+        fecha_gasto: new Date().toISOString().split('T')[0],
+        tipo: 'Variable',
+        descripcion: ''
+      })
+      setShowForm(false)
+      dispatch(resetGastoState())
     }
-  }
-
-  const fetchResumenFinanciero = async () => {
-    try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-      }
-      
-      const { data } = await axios.get(`/api/gastos/resumen/${actividadId}`, config)
-      setResumenFinanciero(data)
-    } catch (error) {
-      console.error('Error al cargar resumen financiero:', error)
-    }
-  }
+  }, [success, dispatch])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -89,39 +59,44 @@ const GastosActividad = () => {
     })
   }
 
-  const handleSubmit = async (e) => {
+  const resetForm = () => {
+    setFormData({
+      concepto: '',
+      monto: '',
+      fecha_gasto: new Date().toISOString().split('T')[0],
+      tipo: 'Variable',
+      descripcion: ''
+    })
+    setSelectedGasto(null)
+    setEditMode(false)
+    setShowForm(false)
+  }
+
+  const handleSubmit = (e) => {
     e.preventDefault()
-    try {
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-      }
-      
-      await axios.post('/api/gastos', {
-        ...formData,
-        actividad_id: actividadId,
-        monto: parseFloat(formData.monto)
-      }, config)
-      
-      // Resetear formulario y actualizar datos
-      setFormData({
-        concepto: '',
-        monto: '',
-        fecha_gasto: new Date().toISOString().split('T')[0],
-        tipo: 'Variable',
-        descripcion: ''
-      })
-      setShowForm(false)
-      fetchGastos()
-      fetchResumenFinanciero()
-    } catch (error) {
-      setError(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      )
+    
+    // Validar campos requeridos
+    if (!formData.concepto || !formData.monto) {
+      return alert('Por favor completa todos los campos requeridos')
+    }
+    
+    const gastoData = {
+      ...formData,
+      actividad_id: actividadId,
+      monto: parseFloat(formData.monto)
+    }
+    
+    if (editMode && selectedGasto) {
+      dispatch(updateGasto({ id: selectedGasto._id, gastoData }))
+        .unwrap()
+        .then(() => {
+          resetForm()
+        })
+        .catch((error) => {
+          console.error('Error al actualizar gasto:', error)
+        })
+    } else {
+      dispatch(createGasto(gastoData))
     }
   }
 
@@ -133,6 +108,36 @@ const GastosActividad = () => {
     }).format(amount)
   }
 
+  const handleEditGasto = (gasto) => {
+    setSelectedGasto(gasto)
+    setFormData({
+      concepto: gasto.concepto,
+      monto: gasto.monto,
+      fecha_gasto: new Date(gasto.fecha_gasto).toISOString().split('T')[0],
+      tipo: gasto.tipo,
+      descripcion: gasto.descripcion || ''
+    })
+    setEditMode(true)
+    setShowForm(true)
+  }
+  
+  const handleDeleteGasto = (gastoId) => {
+    if (confirmDelete === gastoId) {
+      dispatch(deleteGasto(gastoId))
+        .unwrap()
+        .then(() => {
+          dispatch(getGastosPorActividad(actividadId))
+          dispatch(getResumenFinanciero(actividadId))
+          setConfirmDelete(null)
+        })
+        .catch((error) => {
+          console.error('Error al eliminar gasto:', error)
+        })
+    } else {
+      setConfirmDelete(gastoId)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
@@ -140,6 +145,9 @@ const GastosActividad = () => {
           <h2 className="text-xl font-semibold text-gray-800 mb-1">
             Gestión Financiera: {actividad?.titulo}
           </h2>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            {editMode ? 'Editar gasto' : 'Registrar nuevo gasto'}
+          </h3>
           <p className="text-sm text-gray-500">
             Administre los gastos y revise el punto de equilibrio de esta actividad
           </p>
@@ -258,11 +266,11 @@ const GastosActividad = () => {
                     type="submit"
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm"
                   >
-                    Guardar
+                    {editMode ? 'Actualizar' : 'Guardar'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowForm(false)}
+                    onClick={resetForm}
                     className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:w-auto sm:text-sm"
                   >
                     Cancelar

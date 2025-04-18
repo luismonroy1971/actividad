@@ -33,6 +33,8 @@ import AdminUsuarioForm from './pages/admin/UsuarioForm'
 import Grupos from './pages/admin/Grupos'
 import GrupoForm from './pages/admin/GrupoForm'
 import GastosActividad from './pages/admin/GastosActividad'
+import GastoForm from './pages/admin/GastoForm';
+import Gastos from './pages/admin/Gastos';
 
 // Componentes
 import NotFound from './components/NotFound'
@@ -92,7 +94,9 @@ function App() {
         <Route path="grupos" element={<Grupos />} />
         <Route path="grupos/crear" element={<GrupoForm />} />
         <Route path="grupos/editar/:id" element={<GrupoForm />} />
-        <Route path="actividades/:id/gastos" element={<GastosActividad />} />
+        <Route path="actividades/:actividadId/gastos" element={<GastosActividad />} />
+        <Route path="actividades/:actividadId/gastos/crear" element={<GastoForm />} />
+        <Route path="gastos" element={<Gastos />} />
       </Route>
       
       {/* Ruta 404 */}

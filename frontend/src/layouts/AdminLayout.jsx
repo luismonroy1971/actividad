@@ -24,6 +24,7 @@ const AdminLayout = () => {
     { name: 'Clientes', href: '/admin/clientes', icon: UserGroupIcon, current: location.pathname.includes('/admin/clientes') },
     { name: 'Usuarios', href: '/admin/usuarios', icon: UserGroupIcon, current: location.pathname.includes('/admin/usuarios') },
     { name: 'Pedidos', href: '/admin/pedidos', icon: CurrencyDollarIcon, current: location.pathname.includes('/admin/pedidos') },
+    { name: 'Gastos', href: '/admin/gastos', icon: CurrencyDollarIcon, current: location.pathname.includes('/admin/gastos') },
   ]
 
   return (

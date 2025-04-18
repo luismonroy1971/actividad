@@ -1,13 +1,9 @@
 /**
- * Utilidad para formatear fechas correctamente sin problemas de zona horaria
- */
-
-/**
  * Formatea una fecha ISO para mostrarla en formato DD/MM/YYYY
  * @param {string} dateString - String de fecha en formato ISO o similar
  * @return {string} Fecha formateada como DD/MM/YYYY
  */
-export const formatDate = (dateString) => {
+const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     
     try {
