@@ -26,8 +26,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// File Upload - configuración mejorada
-app.use(fileUpload({
+// Configuración de File Upload - solo se aplicará a rutas específicas
+const fileUploadMiddleware = fileUpload({
   createParentPath: true,  // Crea automáticamente directorios padre si no existen
   limits: { 
     fileSize: process.env.MAX_FILE_SIZE || 5 * 1024 * 1024 // 5MB por defecto o lo que se configure
@@ -36,7 +36,22 @@ app.use(fileUpload({
   useTempFiles: true,      // Usa archivos temporales para mejorar el rendimiento
   tempFileDir: path.join(baseDir, '/uploads/temp/'), // Directorio temporal
   debug: process.env.NODE_ENV === 'development' // Modo debug en desarrollo
-}));
+});
+
+// Función para aplicar el middleware solo cuando sea necesario
+const applyFileUpload = (req, res, next) => {
+  // Verificar si la ruta actual necesita manejar archivos
+  // Solo aplicar a rutas POST o PUT que probablemente suban archivos
+  if ((req.method === 'POST' || req.method === 'PUT') && 
+      (req.originalUrl.includes('/api/actividades') || 
+       req.originalUrl.includes('/api/usuarios/perfil'))) {
+    return fileUploadMiddleware(req, res, next);
+  }
+  next();
+};
+
+// Aplicar el middleware condicionalmente
+app.use(applyFileUpload);
 
 // Configurar carpeta de uploads
 app.use('/uploads', express.static(path.join(baseDir, '/uploads')));

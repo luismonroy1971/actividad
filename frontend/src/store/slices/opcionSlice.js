@@ -12,10 +12,16 @@ const initialState = {
 // Obtener todas las opciones
 export const fetchOpciones = createAsyncThunk(
   'opciones/fetchAll',
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get('/api/opciones')
-      return data
+      // Construir URL con parámetros de consulta si se proporcionan
+      let url = '/api/opciones';
+      if (params.actividad_id) {
+        url = `/api/opciones?actividad_id=${params.actividad_id}`;
+      }
+      
+      const { data } = await axios.get(url);
+      return data;
     } catch (error) {
       return rejectWithValue(
         error.response && error.response.data.message

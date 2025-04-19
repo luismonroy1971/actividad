@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useParams, Link } from 'react-router-dom'
 import Loader from '../../components/Loader'
@@ -15,6 +15,9 @@ const GastosActividad = () => {
   const [editMode, setEditMode] = useState(false)
   const [selectedGasto, setSelectedGasto] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [sortField, setSortField] = useState('fecha_gasto')
+  const [sortDirection, setSortDirection] = useState('desc')
+  const formRef = useRef(null)
 
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
@@ -119,6 +122,13 @@ const GastosActividad = () => {
     })
     setEditMode(true)
     setShowForm(true)
+    
+    // Desplazar la pantalla al formulario después de un breve retraso para asegurar que el formulario esté visible
+    setTimeout(() => {
+      if (formRef.current) {
+        formRef.current.scrollIntoView({ behavior: 'smooth' })
+      }
+    }, 100)
   }
   
   const handleDeleteGasto = (gastoId) => {
@@ -138,12 +148,22 @@ const GastosActividad = () => {
     }
   }
 
+  // Calcular la suma total de los gastos
+  const totalGastos = gastos && gastos.length > 0 
+    ? gastos.reduce((sum, gasto) => sum + (parseFloat(gasto.monto) || 0), 0)
+    : 0
+    
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-800 mb-1">
             Gestión Financiera: {actividad?.titulo}
+            {gastos && gastos.length > 0 && (
+              <span className="ml-2 text-lg font-medium text-gray-600">
+                (Total: {formatCurrency(totalGastos)})
+              </span>
+            )}
           </h2>
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             {editMode ? 'Editar gasto' : 'Registrar nuevo gasto'}
@@ -169,7 +189,7 @@ const GastosActividad = () => {
         <>
           {/* Formulario de registro de gastos */}
           {showForm && (
-            <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <div className="bg-white rounded-lg shadow p-6 mb-6" ref={formRef}>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Registrar nuevo gasto</h3>
               <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -361,31 +381,75 @@ const GastosActividad = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                        onClick={() => {
+                          setSortDirection(sortField === 'concepto' && sortDirection === 'asc' ? 'desc' : 'asc');
+                          setSortField('concepto');
+                        }}
+                      >
                         Concepto
+                        {sortField === 'concepto' && (
+                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Monto
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                        onClick={() => {
+                          setSortDirection(sortField === 'fecha_gasto' && sortDirection === 'asc' ? 'desc' : 'asc');
+                          setSortField('fecha_gasto');
+                        }}
+                      >
                         Fecha
+                        {sortField === 'fecha_gasto' && (
+                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Tipo
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Registrado por
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                        onClick={() => {
+                          setSortDirection(sortField === 'descripcion' && sortDirection === 'asc' ? 'desc' : 'asc');
+                          setSortField('descripcion');
+                        }}
+                      >
+                        Descripción
+                        {sortField === 'descripcion' && (
+                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {gastos.map((gasto) => (
+                    {[...gastos].sort((a, b) => {
+                      if (sortField === 'concepto') {
+                        return sortDirection === 'asc' 
+                          ? a.concepto.localeCompare(b.concepto) 
+                          : b.concepto.localeCompare(a.concepto);
+                      } else if (sortField === 'fecha_gasto') {
+                        return sortDirection === 'asc' 
+                          ? new Date(a.fecha_gasto) - new Date(b.fecha_gasto) 
+                          : new Date(b.fecha_gasto) - new Date(a.fecha_gasto);
+                      } else if (sortField === 'descripcion') {
+                        const descA = a.descripcion || '';
+                        const descB = b.descripcion || '';
+                        return sortDirection === 'asc' 
+                          ? descA.localeCompare(descB) 
+                          : descB.localeCompare(descA);
+                      }
+                      return 0;
+                    }).map((gasto) => (
                       <tr key={gasto._id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {gasto.concepto}
-                          {gasto.descripcion && (
-                            <p className="text-xs text-gray-500 mt-1">{gasto.descripcion}</p>
-                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {formatCurrency(gasto.monto)}
@@ -398,9 +462,10 @@ const GastosActividad = () => {
                             {gasto.tipo}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {gasto.registrado_por?.nombre_usuario || 'Sistema'}
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {gasto.descripcion || '-'}
                         </td>
+
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center space-x-2">
                     <button

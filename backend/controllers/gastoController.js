@@ -1,4 +1,5 @@
 const asyncHandler = require('express-async-handler');
+const mongoose = require('mongoose');
 const Gasto = require('../models/gastoModel');
 const Actividad = require('../models/actividadModel');
 const Pedido = require('../models/pedidoModel');
@@ -171,12 +172,12 @@ const getResumenFinanciero = asyncHandler(async (req, res) => {
 
   // Calcular total de gastos
   const gastosFijos = await Gasto.aggregate([
-    { $match: { actividad_id: mongoose.Types.ObjectId(actividadId), tipo: 'Fijo' } },
+    { $match: { actividad_id: new mongoose.Types.ObjectId(actividadId), tipo: 'Fijo' } },
     { $group: { _id: null, total: { $sum: '$monto' } } }
   ]);
   
   const gastosVariables = await Gasto.aggregate([
-    { $match: { actividad_id: mongoose.Types.ObjectId(actividadId), tipo: 'Variable' } },
+    { $match: { actividad_id: new mongoose.Types.ObjectId(actividadId), tipo: 'Variable' } },
     { $group: { _id: null, total: { $sum: '$monto' } } }
   ]);
 
@@ -188,7 +189,7 @@ const getResumenFinanciero = asyncHandler(async (req, res) => {
   const ingresos = await Pedido.aggregate([
     {
       $match: { 
-        actividad_id: mongoose.Types.ObjectId(actividadId),
+        actividad_id: new mongoose.Types.ObjectId(actividadId),
         estado_pago: 'Pagado'
       }
     },

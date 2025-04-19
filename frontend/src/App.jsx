@@ -17,6 +17,7 @@ import ClienteDashboard from './pages/cliente/Dashboard'
 import ClientePerfil from './pages/cliente/Perfil'
 import ClientePedidos from './pages/cliente/Pedidos'
 import ClientePedidoDetalle from './pages/cliente/PedidoDetalle'
+import RealizarPedido from './pages/cliente/RealizarPedido'
 
 // Páginas de administrador
 import AdminDashboard from './pages/admin/Dashboard'
@@ -65,6 +66,7 @@ function App() {
         <Route path="perfil" element={<ClientePerfil />} />
         <Route path="pedidos" element={<ClientePedidos />} />
         <Route path="pedidos/:id" element={<ClientePedidoDetalle />} />
+        <Route path="realizar-pedido/:id" element={<RealizarPedido />} />
       </Route>
       
       {/* Rutas de administrador */}
