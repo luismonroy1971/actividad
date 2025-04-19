@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { updateCliente, getClienteById } from '../../store/slices/clienteSlice'
+import { updateUserInfo, updateUserPassword } from '../../store/slices/authSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
 
 const Perfil = () => {
   const dispatch = useDispatch()
   const { userInfo } = useSelector((state) => state.auth)
-  const { cliente, loading, error, success } = useSelector((state) => state.cliente)
+  const { cliente = null, loading = false, error = null, success = false } = useSelector((state) => state.clientes || {})
   
   const [formData, setFormData] = useState({
-    nombre: '',
-    apellido: '',
-    email: '',
+    nombre_completo: '',
+    correo: '',
+    documento_identidad: '',
     telefono: '',
-    direccion: '',
+    pregunta_validacion: '',
+    respuesta_validacion: '',
+    grupo_id: '',
     password: '',
     confirmPassword: ''
   })
@@ -23,19 +26,21 @@ const Perfil = () => {
   const [successMessage, setSuccessMessage] = useState(null)
   
   useEffect(() => {
-    if (userInfo && userInfo.id) {
-      dispatch(getClienteById(userInfo.id))
+    if (userInfo && userInfo.cliente_id) {
+      dispatch(getClienteById(userInfo.cliente_id))
     }
   }, [dispatch, userInfo])
   
   useEffect(() => {
     if (cliente) {
       setFormData({
-        nombre: cliente.nombre || '',
-        apellido: cliente.apellido || '',
-        email: cliente.email || '',
+        nombre_completo: cliente.nombre_completo || '',
+        correo: cliente.correo || '',
+        documento_identidad: cliente.documento_identidad || '',
         telefono: cliente.telefono || '',
-        direccion: cliente.direccion || '',
+        pregunta_validacion: cliente.pregunta_validacion || '',
+        respuesta_validacion: cliente.respuesta_validacion || '',
+        grupo_id: cliente.grupo_id || '',
         password: '',
         confirmPassword: ''
       })
@@ -68,12 +73,18 @@ const Perfil = () => {
     
     // Crear objeto con datos a actualizar
     const clienteData = {
-      id: userInfo.id,
-      nombre: formData.nombre,
-      apellido: formData.apellido,
-      email: formData.email,
+      nombre_completo: formData.nombre_completo,
+      correo: formData.correo,
+      documento_identidad: formData.documento_identidad,
       telefono: formData.telefono,
-      direccion: formData.direccion
+      pregunta_validacion: formData.pregunta_validacion,
+      respuesta_validacion: formData.respuesta_validacion
+    }
+    
+    // Mantener el grupo_id existente si está presente
+    // Esto asegura que se respete el grupo_id previamente asignado
+    if (formData.grupo_id) {
+      clienteData.grupo_id = formData.grupo_id
     }
     
     // Añadir contraseña solo si se está actualizando
@@ -81,10 +92,30 @@ const Perfil = () => {
       clienteData.password = formData.password
     }
     
-    dispatch(updateCliente({id: userInfo.id, clienteData}))
+    dispatch(updateCliente({id: userInfo.cliente_id, clienteData}))
       .unwrap()
       .then((updatedCliente) => {
-        // La información de usuario se actualiza automáticamente en el estado
+        // Actualizar la información del usuario en el estado global
+        // Esto asegura que los cambios en el cliente se reflejen en el usuario relacionado
+        const updatedUserInfo = {
+          ...userInfo,
+          nombre: updatedCliente.nombre_completo,
+          correo: updatedCliente.correo,
+          telefono: updatedCliente.telefono,
+          documento_identidad: updatedCliente.documento_identidad
+        }
+        
+        // Actualizar el estado global del usuario
+        dispatch(updateUserInfo(updatedUserInfo))
+        
+        // Si se actualizó la contraseña, también actualizar en el usuario relacionado
+        if (formData.password) {
+          // Llamar a la acción para actualizar la contraseña del usuario relacionado
+          dispatch(updateUserPassword({
+            userId: userInfo._id,
+            password: formData.password
+          }))
+        }
         
         // Limpiar campos de contraseña
         setFormData({
@@ -111,12 +142,12 @@ const Perfil = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+              <label htmlFor="nombre_completo" className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
               <input
                 type="text"
-                id="nombre"
-                name="nombre"
-                value={formData.nombre}
+                id="nombre_completo"
+                name="nombre_completo"
+                value={formData.nombre_completo}
                 onChange={handleChange}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 required
@@ -124,12 +155,12 @@ const Perfil = () => {
             </div>
             
             <div>
-              <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+              <label htmlFor="documento_identidad" className="block text-sm font-medium text-gray-700 mb-1">Documento de Identidad</label>
               <input
                 type="text"
-                id="apellido"
-                name="apellido"
-                value={formData.apellido}
+                id="documento_identidad"
+                name="documento_identidad"
+                value={formData.documento_identidad}
                 onChange={handleChange}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 required
@@ -137,12 +168,12 @@ const Perfil = () => {
             </div>
             
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label htmlFor="correo" className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
               <input
                 type="email"
-                id="email"
-                name="email"
-                value={formData.email}
+                id="correo"
+                name="correo"
+                value={formData.correo}
                 onChange={handleChange}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 required
@@ -161,15 +192,29 @@ const Perfil = () => {
               />
             </div>
             
-            <div className="md:col-span-2">
-              <label htmlFor="direccion" className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+            <div>
+              <label htmlFor="pregunta_validacion" className="block text-sm font-medium text-gray-700 mb-1">Pregunta de Validación</label>
               <input
                 type="text"
-                id="direccion"
-                name="direccion"
-                value={formData.direccion}
+                id="pregunta_validacion"
+                name="pregunta_validacion"
+                value={formData.pregunta_validacion}
                 onChange={handleChange}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                required
+              />
+            </div>
+            
+            <div className="md:col-span-2">
+              <label htmlFor="respuesta_validacion" className="block text-sm font-medium text-gray-700 mb-1">Respuesta de Validación</label>
+              <input
+                type="text"
+                id="respuesta_validacion"
+                name="respuesta_validacion"
+                value={formData.respuesta_validacion}
+                onChange={handleChange}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                required
               />
             </div>
           </div>

@@ -154,7 +154,7 @@ export const deleteCliente = createAsyncThunk(
 )
 
 const clienteSlice = createSlice({
-  name: 'clientes',
+  name: 'cliente',
   initialState,
   reducers: {
     clearClienteError: (state) => {

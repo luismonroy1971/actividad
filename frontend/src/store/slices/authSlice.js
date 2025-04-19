@@ -98,6 +98,39 @@ export const register = createAsyncThunk(
   }
 )
 
+// Actualizar contraseña del usuario relacionado al cliente
+export const updateUserPassword = createAsyncThunk(
+  'auth/updateUserPassword',
+  async ({ userId, password }, { rejectWithValue, getState }) => {
+    try {
+      const {
+        auth: { userInfo },
+      } = getState()
+
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      }
+
+      const { data } = await axios.put(
+        `/api/usuarios/${userId}/password`,
+        { password },
+        config
+      )
+
+      return data
+    } catch (error) {
+      return rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      )
+    }
+  }
+)
+
 // Logout de usuario
 export const logout = createAsyncThunk('auth/logout', async () => {
   localStorage.removeItem('userInfo')
@@ -110,6 +143,10 @@ const authSlice = createSlice({
   reducers: {
     clearError: (state) => {
       state.error = null
+    },
+    updateUserInfo: (state, action) => {
+      state.userInfo = action.payload
+      localStorage.setItem('userInfo', JSON.stringify(action.payload))
     },
   },
   extraReducers: (builder) => {
@@ -153,6 +190,18 @@ const authSlice = createSlice({
         state.loading = false
         state.error = action.payload
       })
+      // Update User Password
+      .addCase(updateUserPassword.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateUserPassword.fulfilled, (state) => {
+        state.loading = false
+      })
+      .addCase(updateUserPassword.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
       // Logout
       .addCase(logout.fulfilled, (state) => {
         state.userInfo = null
@@ -160,6 +209,6 @@ const authSlice = createSlice({
   },
 })
 
-export const { clearError } = authSlice.actions
+export const { clearError, updateUserInfo } = authSlice.actions
 
 export default authSlice.reducer

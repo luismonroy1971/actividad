@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { fetchActividades } from '../../store/slices/actividadSlice'
 import { getPedidos } from '../../store/slices/pedidoSlice'
+import { getClientePedidos } from '../../store/slices/pedidoSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
 import formatDate from '../../utils/dateFormatter'
@@ -25,7 +26,7 @@ const Dashboard = () => {
   
   useEffect(() => {
     dispatch(fetchActividades())
-    dispatch(getPedidos())
+    dispatch(getClientePedidos())
   }, [dispatch])
 
   return (

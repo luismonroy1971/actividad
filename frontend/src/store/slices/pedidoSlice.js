@@ -236,6 +236,33 @@ export const getResumenPedidos = createAsyncThunk(
   }
 )
 
+// Obtener pedidos del cliente actual
+export const getClientePedidos = createAsyncThunk(
+  'pedidos/getClientePedidos',
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const {
+        auth: { userInfo },
+      } = getState()
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      }
+
+      const { data } = await axios.get('/api/pedidos/mispedidos', config)
+      return data
+    } catch (error) {
+      return rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      )
+    }
+  }
+)
+
 const pedidoSlice = createSlice({
   name: 'pedidos',
   initialState,
@@ -274,6 +301,18 @@ const pedidoSlice = createSlice({
         state.pedido = action.payload.data
       })
       .addCase(getPedidoById.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      // Get Cliente Pedidos
+      .addCase(getClientePedidos.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(getClientePedidos.fulfilled, (state, action) => {
+        state.loading = false
+        state.pedidos = action.payload.data
+      })
+      .addCase(getClientePedidos.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })

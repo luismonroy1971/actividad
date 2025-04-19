@@ -2,18 +2,19 @@ import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { getPedidos } from '../../store/slices/pedidoSlice'
+import { getClientePedidos } from '../../store/slices/pedidoSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
 
 const Pedidos = () => {
   const dispatch = useDispatch()
   const { userInfo } = useSelector((state) => state.auth)
-  const { pedidos, loading, error } = useSelector((state) => state.pedido)
+  const { pedidos = [], loading = false, error = null } = useSelector((state) => state.pedido || {})
   const [filteredPedidos, setFilteredPedidos] = useState([])
   const [filtroEstado, setFiltroEstado] = useState('todos')
   
   useEffect(() => {
-    dispatch(getPedidos())
+    dispatch(getClientePedidos())
   }, [dispatch])
   
   useEffect(() => {

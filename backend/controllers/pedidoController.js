@@ -375,6 +375,22 @@ const subirComprobante = asyncHandler(async (req, res) => {
   });
 });
 
+const getPedidosByCliente = asyncHandler(async (req, res) => {
+  // El ID del cliente autenticado
+  const clienteId = req.usuario.cliente_id || req.usuario.id;
+  
+  // Buscar solo los pedidos de este cliente
+  const pedidos = await Pedido.find({ cliente_id: clienteId })
+    .populate('actividad')
+    .populate('cliente_id')
+    .populate('detalles.opcion');
+  
+  res.json({
+    success: true,
+    data: pedidos
+  });
+});
+
 // @desc    Obtener resumen de pedidos por actividad
 // @route   GET /api/pedidos/resumen
 // @access  Private/Admin
@@ -445,6 +461,7 @@ const getResumenPedidos = asyncHandler(async (req, res) => {
 
 module.exports = {
   getPedidos,
+  getPedidosByCliente,
   getPedido,
   crearPedido,
   actualizarPedido,

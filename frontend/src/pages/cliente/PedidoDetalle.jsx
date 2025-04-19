@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useParams, Link } from 'react-router-dom'
 import { getPedidos } from '../../store/slices/pedidoSlice'
+import { getClientePedidos } from '../../store/slices/pedidoSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
 
@@ -9,11 +10,11 @@ const PedidoDetalle = () => {
   const { id } = useParams()
   const dispatch = useDispatch()
   const { userInfo } = useSelector((state) => state.auth)
-  const { pedidos, loading, error } = useSelector((state) => state.pedido)
+  const { pedidos = [], loading = false, error = null } = useSelector((state) => state.pedido || {})
   const [pedido, setPedido] = useState(null)
   
   useEffect(() => {
-    dispatch(getPedidos())
+    dispatch(getClientePedidos())
   }, [dispatch])
   
   useEffect(() => {

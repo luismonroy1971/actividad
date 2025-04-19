@@ -71,4 +71,13 @@ const adminActividad = (req, res, next) => {
   }
 };
 
-module.exports = { protect, admin, superadmin, adminActividad };
+const cliente = (req, res, next) => {
+  if (req.usuario && (req.usuario.rol === 'cliente' || req.usuario.rol === 'admin' || req.usuario.rol === 'superadmin')) {
+    next();
+  } else {
+    res.status(403);
+    throw new Error('No autorizado como cliente');
+  }
+};
+
+module.exports = { protect, admin, superadmin, adminActividad, cliente };

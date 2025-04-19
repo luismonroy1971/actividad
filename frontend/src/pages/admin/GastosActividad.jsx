@@ -201,7 +201,6 @@ const GastosActividad = () => {
                         id="monto"
                         required
                         min="0"
-                        step="1000"
                         value={formData.monto}
                         onChange={handleChange}
                         className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
@@ -261,19 +260,20 @@ const GastosActividad = () => {
                   </div>
                 </div>
 
-                <div className="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    {editMode ? 'Actualizar' : 'Guardar'}
-                  </button>
+                <div className="flex justify-end space-x-3 mt-6">
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:w-auto sm:text-sm"
+                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                   >
                     Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    disabled={loading}
+                  >
+                    {loading ? 'Guardando...' : editMode ? 'Actualizar' : 'Guardar'}
                   </button>
                 </div>
               </form>
@@ -400,6 +400,36 @@ const GastosActividad = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {gasto.registrado_por?.nombre_usuario || 'Sistema'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleEditGasto(gasto)}
+                      className="text-primary-600 hover:text-primary-900 flex items-center"
+                      title="Editar gasto"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      <span className="sr-only">Editar</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteGasto(gasto._id)}
+                      className="text-red-600 hover:text-red-900 flex items-center"
+                      title={confirmDelete === gasto._id ? "Confirmar eliminación" : "Eliminar gasto"}
+                    >
+                      {confirmDelete === gasto._id ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      )}
+                      <span className="sr-only">{confirmDelete === gasto._id ? "Confirmar" : "Eliminar"}</span>
+                    </button>
+                  </div>
                         </td>
                       </tr>
                     ))}

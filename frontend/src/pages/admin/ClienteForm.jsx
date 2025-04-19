@@ -103,9 +103,15 @@ const ClienteForm = () => {
       respuesta_validacion: formData.respuesta_validacion?.trim() || ''
     }
     
+    // Añadir grupo_id solo si existe y no está vacío
+    if (formData.grupo_id && formData.grupo_id.trim() !== '') {
+      trimmedData.grupo_id = formData.grupo_id
+    }
+    
     // Verificar que no haya campos vacíos después del trim
     for (const [key, value] of Object.entries(trimmedData)) {
-      if (!value) {
+      // No validar grupo_id ya que es opcional
+      if (key !== 'grupo_id' && !value) {
         return alert(`El campo ${key.replace('_', ' ')} no puede estar vacío`)
       }
     }
