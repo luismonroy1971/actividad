@@ -167,9 +167,15 @@ const RealizarPedido = () => {
       }
     })
     
+    // Verificar que existe cliente_id en userInfo
+    if (!userInfo.cliente_id) {
+      alert('Error: No se encontró la información del cliente asociada a su cuenta')
+      return
+    }
+    
     // Crear pedido
     const pedidoData = {
-      cliente_id: userInfo._id || userInfo.id,
+      cliente_id: userInfo.cliente_id, // Usar el ID del cliente relacionado al usuario
       actividad_id: actividadData._id || actividadData.id,
       opcion_id: seleccionadas[0], // Tomamos la primera opción seleccionada
       cantidad: cantidades[seleccionadas[0]], // Cantidad de la primera opción

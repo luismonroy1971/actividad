@@ -18,6 +18,7 @@ const ActividadDetalle = () => {
   
   const [actividadData, setActividadData] = useState(null)
   const [opcionesActividad, setOpcionesActividad] = useState([])
+  const [cantidades, setCantidades] = useState({})
   
   // Cargar la actividad específica y opciones al montar
   useEffect(() => {

@@ -7,7 +7,7 @@ import Message from '../../components/Message'
 
 const Pedidos = () => {
   const dispatch = useDispatch()
-  const { pedidos, loading, error, success } = useSelector((state) => state.pedidos)
+  const { pedidos = [], loading = false, error = null, success = false } = useSelector((state) => state.pedidos || {})
   const [filteredPedidos, setFilteredPedidos] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterEstado, setFilterEstado] = useState('')
@@ -17,13 +17,13 @@ const Pedidos = () => {
   }, [dispatch, success])
   
   useEffect(() => {
-    if (pedidos) {
+    if (pedidos && Array.isArray(pedidos)) {
       // Filtrar pedidos por término de búsqueda y estado
       let filtered = [...pedidos]
       
       if (searchTerm) {
         filtered = filtered.filter(pedido => 
-          pedido.id.toString().includes(searchTerm) ||
+          (pedido.id && pedido.id.toString().includes(searchTerm)) ||
           (pedido.cliente?.nombre && pedido.cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (pedido.cliente?.apellido && pedido.cliente.apellido.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (pedido.actividad?.nombre && pedido.actividad.nombre.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -35,6 +35,8 @@ const Pedidos = () => {
       }
       
       setFilteredPedidos(filtered)
+    } else {
+      setFilteredPedidos([])
     }
   }, [pedidos, searchTerm, filterEstado])
 
@@ -135,10 +137,10 @@ const Pedidos = () => {
                       {pedido.actividad ? pedido.actividad.nombre : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(pedido.fecha_pedido).toLocaleDateString()}
+                      {pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${pedido.total.toFixed(2)}
+                      ${pedido.total ? pedido.total.toFixed(2) : '0.00'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -148,7 +150,7 @@ const Pedidos = () => {
                         pedido.estado === 'cancelado' ? 'bg-red-100 text-red-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1)}
+                        {pedido.estado ? pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1) : 'N/A'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

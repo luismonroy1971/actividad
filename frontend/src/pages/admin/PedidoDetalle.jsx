@@ -88,13 +88,25 @@ const PedidoDetalle = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium text-gray-500">Actividad:</span>
-                  <span className="text-sm text-gray-900">{pedido.actividad?.nombre || 'N/A'}</span>
+                  <span className="text-sm text-gray-900 font-semibold">{pedido.actividad?.nombre || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium text-gray-500">Descripción:</span>
+                  <span className="text-sm text-gray-900">{pedido.actividad?.descripcion || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium text-gray-500">Fecha de la actividad:</span>
                   <span className="text-sm text-gray-900">
                     {pedido.actividad?.fecha ? new Date(pedido.actividad.fecha).toLocaleDateString() : 'N/A'}
                   </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium text-gray-500">Ubicación:</span>
+                  <span className="text-sm text-gray-900">{pedido.actividad?.ubicacion || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium text-gray-500">Precio base:</span>
+                  <span className="text-sm text-gray-900">${pedido.actividad?.precio?.toFixed(2) || '0.00'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium text-gray-500">Método de pago:</span>
