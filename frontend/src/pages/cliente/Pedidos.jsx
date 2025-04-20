@@ -87,8 +87,8 @@ const Pedidos = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredPedidos.map((pedido) => (
-                  <tr key={pedido.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{pedido.id}</td>
+                  <tr key={pedido._id || pedido.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{pedido._id || pedido.id}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{pedido.actividad?.nombre || 'N/A'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(pedido.fecha_pedido).toLocaleDateString()}
@@ -107,7 +107,7 @@ const Pedidos = () => {
                       ${pedido.total.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Link to={`/cliente/pedidos/${pedido.id}`} className="text-primary-600 hover:text-primary-900">
+                      <Link to={`/cliente/pedidos/${pedido._id || pedido.id}`} className="text-primary-600 hover:text-primary-900">
                         Ver detalles
                       </Link>
                     </td>

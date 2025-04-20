@@ -2,28 +2,37 @@ import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { getPedidos, updatePedidoEstado } from '../../store/slices/pedidoSlice'
+import { getGrupos } from '../../store/slices/grupoSlice'
+import { getActividades } from '../../store/slices/actividadSlice'
 import Loader from '../../components/Loader'
 import Message from '../../components/Message'
 
 const Pedidos = () => {
   const dispatch = useDispatch()
   const { pedidos = [], loading = false, error = null, success = false } = useSelector((state) => state.pedidos || {})
+  const { grupos = [] } = useSelector((state) => state.grupos || {})
+  const { actividades = [] } = useSelector((state) => state.actividades || {})
   const [filteredPedidos, setFilteredPedidos] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterEstado, setFilterEstado] = useState('')
+  const [filterGrupo, setFilterGrupo] = useState('')
+  const [filterActividad, setFilterActividad] = useState('')
   
   useEffect(() => {
     dispatch(getPedidos())
+    dispatch(getGrupos())
+    dispatch(getActividades())
   }, [dispatch, success])
   
   useEffect(() => {
     if (pedidos && Array.isArray(pedidos)) {
-      // Filtrar pedidos por término de búsqueda y estado
+      // Filtrar pedidos por término de búsqueda, estado, grupo y actividad
       let filtered = [...pedidos]
       
       if (searchTerm) {
         filtered = filtered.filter(pedido => 
           (pedido.id && pedido.id.toString().includes(searchTerm)) ||
+          (pedido._id && pedido._id.toString().includes(searchTerm)) ||
           (pedido.cliente?.nombre && pedido.cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (pedido.cliente?.apellido && pedido.cliente.apellido.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (pedido.actividad?.nombre && pedido.actividad.nombre.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -34,11 +43,27 @@ const Pedidos = () => {
         filtered = filtered.filter(pedido => pedido.estado === filterEstado)
       }
       
+      if (filterGrupo) {
+        filtered = filtered.filter(pedido => {
+          const grupoId = pedido.actividad?.grupo_id || pedido.grupo_id;
+          return grupoId && (String(grupoId) === filterGrupo || 
+                           (typeof grupoId === 'object' && String(grupoId._id) === filterGrupo));
+        })
+      }
+      
+      if (filterActividad) {
+        filtered = filtered.filter(pedido => {
+          const actividadId = pedido.actividad_id || (pedido.actividad && (pedido.actividad._id || pedido.actividad.id));
+          return String(actividadId) === filterActividad || 
+                 (typeof actividadId === 'object' && String(actividadId._id || actividadId.id) === filterActividad);
+        })
+      }
+      
       setFilteredPedidos(filtered)
     } else {
       setFilteredPedidos([])
     }
-  }, [pedidos, searchTerm, filterEstado])
+  }, [pedidos, searchTerm, filterEstado, filterGrupo, filterActividad])
 
   const handleChangeEstado = (id, nuevoEstado) => {
     if (window.confirm(`¿Estás seguro de cambiar el estado del pedido a ${nuevoEstado}?`)) {
@@ -54,7 +79,7 @@ const Pedidos = () => {
       
       {/* Filtros */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Buscador */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -83,6 +108,38 @@ const Pedidos = () => {
               <option value="confirmado">Confirmado</option>
               <option value="completado">Completado</option>
               <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+          
+          {/* Filtro por grupo */}
+          <div>
+            <select
+              className="focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+              value={filterGrupo}
+              onChange={(e) => setFilterGrupo(e.target.value)}
+            >
+              <option value="">Todos los grupos</option>
+              {grupos.map(grupo => (
+                <option key={grupo._id || grupo.id} value={grupo._id || grupo.id}>
+                  {grupo.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Filtro por actividad */}
+          <div>
+            <select
+              className="focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+              value={filterActividad}
+              onChange={(e) => setFilterActividad(e.target.value)}
+            >
+              <option value="">Todas las actividades</option>
+              {actividades.map(actividad => (
+                <option key={actividad._id || actividad.id} value={actividad._id || actividad.id}>
+                  {actividad.nombre}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -119,6 +176,7 @@ const Pedidos = () => {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actividad</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
@@ -128,19 +186,29 @@ const Pedidos = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredPedidos.map((pedido) => (
-                  <tr key={pedido.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{pedido.id}</td>
+                  <tr key={pedido._id || pedido.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{pedido._id || pedido.id}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {pedido.cliente ? `${pedido.cliente.nombre} ${pedido.cliente.apellido}` : 'N/A'}
+                      {pedido.cliente ? 
+                        `${pedido.cliente.nombre || ''} ${pedido.cliente.apellido || ''}` : 
+                        (pedido.cliente_id && typeof pedido.cliente_id === 'object' ? 
+                          `${pedido.cliente_id.nombre || ''} ${pedido.cliente_id.apellido || ''}` : 'N/A')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {pedido.actividad ? pedido.actividad.nombre : 'N/A'}
+                      {pedido.actividad?.grupo?.nombre || 
+                       pedido.actividad?.grupo_id?.nombre || 
+                       (pedido.grupo ? pedido.grupo.nombre : 'N/A')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {pedido.actividad?.nombre || 
+                       (pedido.actividad_id && typeof pedido.actividad_id === 'object' ? 
+                         pedido.actividad_id.nombre : 'N/A')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${pedido.total ? pedido.total.toFixed(2) : '0.00'}
+                      ${typeof pedido.total === 'number' ? pedido.total.toFixed(2) : '0.00'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

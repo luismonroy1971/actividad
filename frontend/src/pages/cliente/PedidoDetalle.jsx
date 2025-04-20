@@ -19,7 +19,11 @@ const PedidoDetalle = () => {
   
   useEffect(() => {
     if (pedidos && id) {
-      const pedidoEncontrado = pedidos.find(p => p.id === parseInt(id) || p._id === id)
+      // Buscar el pedido por _id primero, luego por id si es necesario
+      const pedidoEncontrado = pedidos.find(p => 
+        (p._id && p._id.toString() === id.toString()) || 
+        (p.id && p.id.toString() === id.toString())
+      )
       
       // Verificar que el pedido pertenezca al cliente actual
       const pedidoClienteId = pedidoEncontrado?.cliente_id?._id || pedidoEncontrado?.cliente_id;
@@ -41,7 +45,7 @@ const PedidoDetalle = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-800">Detalles del Pedido #{pedido.id}</h2>
+        <h2 className="text-xl font-semibold text-gray-800">Detalles del Pedido #{pedido._id || pedido.id}</h2>
         <Link to="/cliente/pedidos" className="text-primary-600 hover:text-primary-800 text-sm font-medium">
           ← Volver a mis pedidos
         </Link>
