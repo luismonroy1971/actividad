@@ -102,7 +102,10 @@ const RealizarPedido = () => {
   // Redireccionar después de éxito
   useEffect(() => {
     if (pedidoSuccess) {
-      navigate('/cliente/pedidos')
+      // Mostrar mensaje de éxito antes de redirigir
+      setTimeout(() => {
+        navigate('/cliente/pedidos')
+      }, 2000) // Esperar 2 segundos antes de redirigir
     }
   }, [pedidoSuccess, navigate])
     
@@ -214,6 +217,7 @@ const RealizarPedido = () => {
       </div>
       
       {pedidoError && <Message variant="error">{pedidoError}</Message>}
+      {pedidoSuccess && <Message variant="success">¡Pedido realizado con éxito! Redirigiendo a tus pedidos...</Message>}
       
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="p-6">
@@ -398,12 +402,21 @@ const RealizarPedido = () => {
             {/* Botón de envío */}
             <div className="flex justify-end">
               <button
-                type="submit"
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-md"
-                disabled={pedidoLoading || seleccionadas.length === 0}
-              >
-                {pedidoLoading ? <Loader small /> : 'Realizar Pedido'}
-              </button>
+              type="submit"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={pedidoLoading || seleccionadas.length === 0 || pedidoSuccess}
+            >
+              {pedidoLoading ? (
+                <>
+                  <Loader small />
+                  <span className="ml-2">Procesando...</span>
+                </>
+              ) : pedidoSuccess ? (
+                'Pedido Realizado'
+              ) : (
+                'Realizar Pedido'
+              )}
+            </button>
             </div>
           </form>
         </div>

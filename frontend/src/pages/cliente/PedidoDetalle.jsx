@@ -19,10 +19,16 @@ const PedidoDetalle = () => {
   
   useEffect(() => {
     if (pedidos && id) {
-      const pedidoEncontrado = pedidos.find(p => p.id === parseInt(id))
+      const pedidoEncontrado = pedidos.find(p => p.id === parseInt(id) || p._id === id)
       
       // Verificar que el pedido pertenezca al cliente actual
-      if (pedidoEncontrado && pedidoEncontrado.cliente_id === userInfo?.id) {
+      const pedidoClienteId = pedidoEncontrado?.cliente_id?._id || pedidoEncontrado?.cliente_id;
+      const userClienteId = userInfo?.cliente_id;
+      
+      console.log('Pedido encontrado:', pedidoEncontrado);
+      console.log('Cliente ID del pedido:', pedidoClienteId, 'Cliente ID del usuario:', userClienteId);
+      
+      if (pedidoEncontrado && (String(pedidoClienteId) === String(userClienteId))) {
         setPedido(pedidoEncontrado)
       }
     }

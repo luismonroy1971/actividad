@@ -22,7 +22,9 @@ const Pedidos = () => {
     const clientePedidos = pedidos?.filter(pedido => {
       // Comparar como strings para mayor seguridad
       const pedidoClienteId = pedido.cliente_id?._id || pedido.cliente_id;
-      const userClienteId = userInfo?.cliente_id || userInfo?.id;
+      const userClienteId = userInfo?.cliente_id;
+      
+      console.log('Pedido ID:', pedido.id, 'Cliente ID del pedido:', pedidoClienteId, 'Cliente ID del usuario:', userClienteId);
       
       return pedidoClienteId && userClienteId && 
              String(pedidoClienteId) === String(userClienteId);
