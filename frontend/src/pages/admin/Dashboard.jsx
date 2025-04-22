@@ -34,12 +34,12 @@ const Dashboard = () => {
       )
       
       const pedidosPendientes = pedidos.filter(ped => 
-        ped && ped.estado === 'pendiente'
+        ped && ped.estado_pago === 'Pendiente'
       )
       
       // Añadir comprobación para evitar error si algún pedido no tiene propiedad total
       const ingresoTotal = pedidos.reduce((total, pedido) => {
-        const pedidoTotal = pedido && pedido.total ? Number(pedido.total) : 0
+        const pedidoTotal = pedido && pedido.costo_total ? Number(pedido.costo_total) : 0
         return total + pedidoTotal
       }, 0)
 
@@ -83,6 +83,14 @@ const Dashboard = () => {
       return 'N/A';
     }
   };
+
+  // Función para formatear IDs más cortos para la visualización
+  const formatId = (id) => {
+    if (!id) return 'N/A';
+    // Mostrar solo los primeros 8 caracteres para mayor legibilidad
+    return typeof id === 'string' && id.length > 8 ? id.substring(0, 8) + '...' : id;
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-800">Panel de Administración</h2>
@@ -235,6 +243,7 @@ const Dashboard = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actividad</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opción</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
@@ -245,29 +254,31 @@ const Dashboard = () => {
                 {pedidos.slice(0, 5).map((pedido) => (
                   <tr key={pedido?._id || pedido?.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      #{pedido?._id || pedido?.id || 'N/A'}
+                      #{formatId(pedido?._id || pedido?.id)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {pedido?.cliente?.nombre || 'N/A'}
+                      {pedido?.cliente_id?.nombre_completo || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {pedido?.actividad?.titulo || pedido?.actividad?.nombre || 'N/A'}
+                      {pedido?.actividad_id?.titulo || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {pedido?.opcion_id?.nombre || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(pedido?.fecha_pedido)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        pedido?.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-800' :
-                        pedido?.estado === 'completado' ? 'bg-green-100 text-green-800' :
-                        pedido?.estado === 'cancelado' ? 'bg-red-100 text-red-800' :
+                        pedido?.estado_pago === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                        pedido?.estado_pago === 'Pagado' ? 'bg-green-100 text-green-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {pedido?.estado ? (pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1)) : 'N/A'}
+                        {pedido?.estado_pago || 'N/A'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${pedido?.total ? Number(pedido.total).toFixed(2) : '0.00'}
+                      ${pedido?.costo_total ? Number(pedido.costo_total).toFixed(2) : '0.00'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <Link to={`/admin/pedidos/${pedido?._id || pedido?.id}`} className="text-primary-600 hover:text-primary-900">
