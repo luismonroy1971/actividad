@@ -10,7 +10,7 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "build": "npm install && cd frontend && npm install && npm run build",
     "deploy": "npm run build && vercel --prod",
-    "vercel-build": "npm run build",
+    "vercel-build": "cd frontend && npm install && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
