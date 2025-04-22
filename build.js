@@ -48,30 +48,41 @@ async function construirProyecto() {
     process.exit(1);
   }
   
-  // Instalar dependencias del frontend
-  console.log('Instalando dependencias del frontend...');
-  if (!ejecutarComando('npm install', directorioFrontend)) {
+  // Instalar TODAS las dependencias del frontend (incluidas devDependencies)
+  console.log('Instalando dependencias del frontend (incluidas devDependencies)...');
+  if (!ejecutarComando('npm install --production=false', directorioFrontend)) {
     process.exit(1);
   }
   
-  // Instalar Vite globalmente para asegurar que esté disponible
-  console.log('Instalando Vite globalmente...');
-  if (!ejecutarComando('npm install -g vite')) {
-    console.warn('Advertencia: No se pudo instalar Vite globalmente, continuando de todos modos...');
+  // Instalar específicamente el plugin de React para Vite
+  console.log('Instalando plugin de React para Vite...');
+  if (!ejecutarComando('npm install @vitejs/plugin-react', directorioFrontend)) {
+    console.warn('Advertencia: No se pudo instalar @vitejs/plugin-react, continuando de todos modos...');
   }
   
-  // Mover Vite de devDependencies a dependencies si es necesario
-  console.log('Asegurando que Vite esté en las dependencias...');
-  if (!ejecutarComando('npm install --save vite', directorioFrontend)) {
-    console.warn('Advertencia: No se pudo instalar Vite como dependencia, continuando de todos modos...');
+  // Instalar Vite si no está ya instalado
+  console.log('Asegurando que Vite esté instalado...');
+  if (!ejecutarComando('npm install vite', directorioFrontend)) {
+    console.warn('Advertencia: No se pudo instalar vite, continuando de todos modos...');
   }
   
-  // Construir frontend con ruta explícita a vite
+  // Verificar el contenido del vite.config.js
+  console.log('Verificando archivo vite.config.js...');
+  const viteConfigPath = path.join(directorioFrontend, 'vite.config.js');
+  if (fs.existsSync(viteConfigPath)) {
+    console.log('Contenido de vite.config.js:');
+    const viteConfig = fs.readFileSync(viteConfigPath, 'utf8');
+    console.log(viteConfig);
+  } else {
+    console.error('¡El archivo vite.config.js no existe!');
+  }
+  
+  // Construir frontend usando npx para asegurar que se use la versión local
   console.log('Construyendo frontend...');
   if (!ejecutarComando('npx vite build', directorioFrontend)) {
-    // Intentar método de construcción alternativo
+    // Intentar método de construcción alternativo usando la ruta exacta
     console.log('Probando método de construcción alternativo...');
-    if (!ejecutarComando('./node_modules/.bin/vite build', directorioFrontend)) {
+    if (!ejecutarComando('node ./node_modules/vite/bin/vite.js build', directorioFrontend)) {
       console.error('¡La construcción del frontend falló!');
       process.exit(1);
     }
