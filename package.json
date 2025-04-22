@@ -11,9 +11,8 @@
     "server": "nodemon backend/server.js",
     "client": "npm run dev --prefix frontend",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "install-client": "cd frontend && npm install",
-    "build-client": "cd frontend && npm run build",
-    "build": "npm install && npm run install-client && npm run build-client",
+    "build": "node build.js",
+    "vercel-build": "node build.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
