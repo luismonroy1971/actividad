@@ -2,14 +2,18 @@
   "name": "actividades-pro-fondos",
   "version": "1.0.0",
   "description": "Aplicación web para gestionar actividades pro fondos",
-  "main": "index.js",
+  "main": "backend/server.js",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "start": "node backend/server.js",
     "server": "nodemon backend/server.js",
     "client": "npm run dev --prefix frontend",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "build": "cd frontend && npm install && npm run build",
-    "vercel-build": "npm run build",
+    "install-client": "cd frontend && npm install",
+    "build-client": "cd frontend && npm run build",
+    "build": "npm install && npm run install-client && npm run build-client",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
