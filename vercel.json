@@ -4,6 +4,14 @@
   "outputDirectory": "frontend/dist",
   "installCommand": "npm install",
   "framework": null,
+  "env": {
+    "NODE_ENV": "production",
+    "MONGO_URI": "@mongo_uri",
+    "JWT_SECRET": "@jwt_secret",
+    "JWT_EXPIRE": "30d",
+    "FILE_UPLOAD_PATH": "./uploads",
+    "MAX_FILE_SIZE": "1000000"
+  },
   "routes": [
     {
       "src": "/api/(.*)",
@@ -11,14 +19,22 @@
     },
     {
       "src": "/uploads/(.*)",
-      "dest": "/api/index.js"
+      "dest": "/api/uploads.js"
     },
     {
       "handle": "filesystem"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "/frontend/dist/assets/$1"
+    },
+    {
+      "src": "/(.+\\.[a-z0-9]+)$",
+      "dest": "/frontend/dist/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/frontend/dist/index.html"
     }
   ]
 }
