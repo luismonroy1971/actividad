@@ -115,7 +115,7 @@ const Dashboard = () => {
                 <div className="h-40 bg-gray-200 overflow-hidden">
                   {actividad.imagen_promocional && actividad.imagen_promocional !== 'no-photo.jpg' ? (
                     <img 
-                      src={`/uploads/actividades/${actividad.imagen_promocional}`} 
+                      src={`${window.UPLOADS_URL}/uploads/actividades/${actividad.imagen_promocional}`} 
                       alt={actividad.nombre || actividad.titulo} 
                       className="w-full h-full object-cover"
                       onError={(e) => {

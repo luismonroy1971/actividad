@@ -9,7 +9,13 @@ import './index.css'
 import { store } from './store'
 // Configurar axios
 import axios from 'axios'
-axios.defaults.baseURL = 'http://localhost:5000'
+
+// Configurar la URL base para las peticiones API
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+axios.defaults.baseURL = apiUrl
+
+// Configurar la URL base para las imágenes
+window.UPLOADS_URL = apiUrl
 // Aumentar el límite de listeners para evitar advertencias
 import events from 'events';
 if (events.EventEmitter && typeof events.EventEmitter.defaultMaxListeners !== 'undefined') {

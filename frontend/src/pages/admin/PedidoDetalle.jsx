@@ -188,7 +188,7 @@ const PedidoDetalle = () => {
                     <span className="text-sm font-medium text-gray-500 block mb-2">Comprobante de pago:</span>
                     <div className="border rounded-md overflow-hidden">
                       <img 
-                        src={`/uploads/comprobantes/${pedido.imagen_comprobante}`} 
+                        src={`${window.UPLOADS_URL}/uploads/comprobantes/${pedido.imagen_comprobante}`} 
                         alt="Comprobante de pago" 
                         className="w-full h-auto"
                       />

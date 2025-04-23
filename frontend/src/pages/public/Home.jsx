@@ -41,9 +41,9 @@ const Home = () => {
       return imageName
     }
     
-    // De lo contrario, construir la URL completa
-    // Esta es la ruta desde la raíz del servidor hacia la carpeta de imágenes
-    return `/uploads/actividades/${imageName}`
+    // De lo contrario, construir la URL completa usando la URL base del servidor
+    // Usar la URL base configurada en main.jsx
+    return `${window.UPLOADS_URL}/uploads/actividades/${imageName}`
   }
 
   return (

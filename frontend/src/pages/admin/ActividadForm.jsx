@@ -346,8 +346,8 @@ const ActividadForm = () => {
                       // Si es una URL de datos (Data URL), usarla directamente
                       imagePreview.startsWith('data:') 
                         ? imagePreview 
-                        // Si no, construir la ruta al archivo en el servidor
-                        : `/uploads/actividades/${imagePreview}`
+                        // Si no, construir la ruta al archivo en el servidor usando la URL base
+                        : `${window.UPLOADS_URL}/uploads/actividades/${imagePreview}`
                     } 
                     alt="Vista previa" 
                     className="h-40 w-auto object-cover rounded-md border border-gray-300"

@@ -119,7 +119,7 @@ const ActividadDetalle = () => {
         {actividadData.imagen_promocional && actividadData.imagen_promocional !== 'no-photo.jpg' ? (
           <div className="h-64 bg-gray-200 overflow-hidden">
             <img 
-              src={`/uploads/actividades/${actividadData.imagen_promocional}`} 
+              src={`${window.UPLOADS_URL}/uploads/actividades/${actividadData.imagen_promocional}`} 
               alt={actividadData.titulo} 
               className="w-full h-full object-cover"
               onError={(e) => {
